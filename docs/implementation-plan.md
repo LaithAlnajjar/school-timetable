@@ -2,9 +2,9 @@
 
 1. **Complete — project data.** Models, week validation, stable references, atomic
    storage/recovery, examples, repository conventions and pinned environment.
-2. **Next — scheduling.** CP-SAT constraints/preferences, preflight, independent
+2. **Complete — scheduling.** CP-SAT constraints/preferences, preflight, independent
    schedule validation, locks, cancellation and representative benchmark.
-3. **Pending — desktop workflow.** Guided Qt setup, responsive generation, shared
+3. **Next — desktop workflow.** Guided Qt setup, responsive generation, shared
    views, atomic manual edits/undo, Excel/Qt PDF exports and user guide.
 4. **Pending — Windows delivery.** PyInstaller folder build, reproducible scripts,
    Windows/Linux checks, manual packaging CI, smoke/visual QA and final audit.
@@ -24,3 +24,10 @@ Project-data validation: 10 pytest cases passed on Windows 11 / CPython 3.12.14;
 Ruff lint/format and `pip check` passed. Exact runtime/transitive pins are recorded
 in requirements.txt; development/build/inspection pins are in requirements-dev.txt.
 Recovery integration belongs to the desktop milestone; atomic storage is ready.
+
+Scheduler validation: 26 tests passed, including independent count/resource assertions,
+availability/limits, real doubles and room constraints, locks, impossible combinations,
+cancel-before/during search and controlled solver-status regression tests. No input
+project is mutated by generation. CP-SAT uses four workers and seed 42; valid feasible
+results remain usable before preference optimality is proved. Hard infeasibility gets
+honest suggestions rather than an unproved exact diagnosis. See performance.md.

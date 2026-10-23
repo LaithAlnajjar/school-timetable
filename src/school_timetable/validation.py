@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import re
+from collections import Counter, defaultdict
 from dataclasses import dataclass
 
-from .models import Project, slot_index, teaching_slots
+from .models import Lesson, Project, chains, lesson_blocks, slot_index, teaching_slots
 
 
 @dataclass(frozen=True)
@@ -125,4 +126,138 @@ def validate_setup(project: Project) -> list[Issue]:
             for room_id in r.room_ids:
                 if not project.lookup("rooms", room_id):
                     error("requirements", f"{label}: a suitable room is missing.")
+    return issues
+
+
+def requirement_name(project: Project, requirement) -> str:
+    group = project.lookup("classes", requirement.class_id)
+    subject = project.lookup("subjects", requirement.subject_id)
+    return (
+        f"{group.name if group else 'Missing class'} / "
+        f"{subject.name if subject else 'Missing subject'}"
+    )
+
+
+def validate_schedule(
+    project: Project, lessons: list[Lesson] | None = None, *, complete=True, preserve_locks=True
+) -> list[Issue]:
+    """Check actual placements/counts independently of CP-SAT variables or constraints."""
+    issues = validate_setup(project)
+    if issues:
+        return issues
+    proposed = project.lessons if lessons is None else lessons
+    slots = slot_index(project)
+    reqs = {r.id: r for r in project.requirements}
+    expected = {key: (r.id, length) for r in reqs.values() for key, length in lesson_blocks(r)}
+    seen: set[str] = set()
+    counts: Counter = Counter()
+    doubles: Counter = Counter()
+    occupied: dict[tuple[str, str, str], str] = {}
+    teacher_days: Counter = Counter()
+    subject_days: Counter = Counter()
+    teacher_slots: dict[str, set[str]] = defaultdict(set)
+
+    def error(text):
+        issues.append(Issue("schedule", text))
+
+    for lesson in proposed:
+        r = reqs.get(lesson.requirement_id)
+        if not r:
+            error("A lesson refers to a removed requirement. Regenerate or remove its lock.")
+            continue
+        label = requirement_name(project, r)
+        if lesson.id in seen:
+            error(f"{label}: a lesson block appears more than once.")
+        seen.add(lesson.id)
+        if expected.get(lesson.id) != (r.id, len(lesson.slot_ids)):
+            error(f"{label}: this lesson block no longer matches its weekly requirements.")
+        length = len(lesson.slot_ids)
+        if length not in (1, 2) or len(set(lesson.slot_ids)) != length:
+            error(f"{label}: a lesson must occupy one period or a two-period double.")
+            continue
+        if any(sid not in slots for sid in lesson.slot_ids):
+            error(f"{label}: a lesson or lock refers to a removed time slot.")
+            continue
+        located = [slots[sid] for sid in lesson.slot_ids]
+        if length == 2:
+            a, b = located
+            if a[0] != b[0] or b[1] != a[1] + 1 or a[2].end != b[2].start:
+                error(f"{label}: a double must be adjacent on one day without a break or time gap.")
+            doubles[r.id] += 1
+        counts[r.id] += length
+        teacher = project.lookup("teachers", r.teacher_id)
+        room = project.lookup("rooms", lesson.room_id) if lesson.room_id else None
+        if project.settings.rooms_enabled:
+            if r.room_ids and lesson.room_id not in r.room_ids:
+                error(f"{label}: choose one of its suitable rooms.")
+            if lesson.room_id and not room:
+                error(f"{label}: the assigned room no longer exists.")
+            if not r.room_ids and lesson.room_id:
+                error(f"{label}: remove the room or configure it in suitable rooms.")
+        elif lesson.room_id is not None:
+            error(f"{label}: room scheduling is disabled; regenerate without room assignments.")
+        for sid, (d, _, slot) in zip(lesson.slot_ids, located, strict=True):
+            day = project.days[d]
+            where = f"{day.name}, {slot.name} ({slot.start})"
+            if not slot.teaching:
+                error(f"{label}: {where} is a break or blocked period.")
+            if sid in teacher.unavailable:
+                error(f"{teacher.name} is unavailable at {where}.")
+            if project.settings.rooms_enabled and room and sid in room.unavailable:
+                error(f"{room.name} is unavailable at {where}.")
+            resources = [
+                ("class", r.class_id, project.lookup("classes", r.class_id).name),
+                ("teacher", teacher.id, teacher.name),
+            ]
+            if project.settings.rooms_enabled and room:
+                resources.append(("room", room.id, room.name))
+            for kind, record_id, name in resources:
+                key = (kind, record_id, sid)
+                if key in occupied:
+                    error(f"{name} has two lessons at {where} ({occupied[key]} and {label}).")
+                occupied[key] = label
+            teacher_days[teacher.id, d] += 1
+            subject_days[r.id, d] += 1
+            teacher_slots[teacher.id].add(sid)
+    for teacher in project.teachers:
+        for d, day in enumerate(project.days):
+            count = teacher_days[teacher.id, d]
+            if teacher.max_daily is not None and count > teacher.max_daily:
+                error(
+                    f"{teacher.name} has {count} periods on {day.name}; "
+                    f"daily limit is {teacher.max_daily}."
+                )
+            if teacher.max_consecutive is not None:
+                longest = 0
+                for chain in chains(day):
+                    run = 0
+                    for slot in chain:
+                        run = run + 1 if slot.id in teacher_slots[teacher.id] else 0
+                        longest = max(longest, run)
+                if longest > teacher.max_consecutive:
+                    error(
+                        f"{teacher.name} has {longest} consecutive periods on {day.name}; "
+                        f"limit is {teacher.max_consecutive}."
+                    )
+    for r in project.requirements:
+        label = requirement_name(project, r)
+        if complete and counts[r.id] != r.periods:
+            error(f"{label} needs exactly {r.periods} periods; this timetable has {counts[r.id]}.")
+        if complete and doubles[r.id] != r.doubles:
+            error(f"{label} needs {r.doubles} double lessons; this timetable has {doubles[r.id]}.")
+        if r.max_per_day is not None:
+            for d, day in enumerate(project.days):
+                if subject_days[r.id, d] > r.max_per_day:
+                    error(f"{label} exceeds its limit of {r.max_per_day} periods on {day.name}.")
+    if preserve_locks and lessons is not None:
+        by_id = {lesson.id: lesson for lesson in proposed}
+        for old in project.lessons:
+            if old.locked:
+                new = by_id.get(old.id)
+                if (
+                    not new
+                    or not new.locked
+                    or (new.slot_ids, new.room_id) != (old.slot_ids, old.room_id)
+                ):
+                    error("A locked lesson was moved, unlocked or removed. Unlock it first.")
     return issues
