@@ -5,7 +5,59 @@ Environment: Windows 11 Home x64, build 22631, CPython 3.12.14, Ryzen 7 5800H
 requirements.txt and requirements-dev.txt. PySide6 6.10.2, OR-Tools 9.15.6755,
 openpyxl 3.1.5, PyInstaller 6.18.0 with hooks 2026.9.
 
-## Observed local results
+## Latest interface repair and replacement ZIP
+
+Branch: **codex/interface-repair**, based on integration startup fix `d1f62a7`.
+Built application source: `74349f4`. [PR #5](https://github.com/LaithAlnajjar/school-timetable/pull/5)
+depends on #4; see [review order](review-order.md). Full before/after evidence,
+design decisions, measured colors and limits are in [UI verification](ui-verification.md).
+
+- **61 tests passed** in the Windows build (15.33 seconds), including 13 interface
+  regressions. Ruff lint, formatting and `pip check` passed. All 31 installed locked
+  dependencies also match their exact repository pins.
+- Native Windows source entry-point smoke passed: 1.844 seconds, 45 UI heartbeats.
+  Folder EXE smoke passed: 2.062 seconds, 50 heartbeats. Freshly extracted ZIP EXE
+  smoke passed: 1.906 seconds, 46 heartbeats. Frozen runs report bundled Python and
+  the native `windows` Qt platform with development paths removed. All exercise
+  generation, move/lock/undo/redo, locked regeneration, saving/reopening, recovery,
+  backup, XLSX/PDF, invalid export rejection and old-schedule preservation after
+  impossible/cancelled generation. PE x64/GUI headers and bundled symbol files pass.
+- Every workflow and important interaction state was captured and visually examined.
+  Five final native runs produced 249 captures: actual Windows light/dark app
+  appearance at 100%, plus Qt scale factors 125/150/200%. Final frame checks report
+  zero off-screen windows. The Windows app appearance setting was restored.
+  Higher scales used fresh-process `QT_SCALE_FACTOR`, not changes to the monitor's
+  Windows Display setting; per-monitor DPI transitions remain unverified.
+- Representative body contrast is 12.65:1, active/inactive selection 7.15:1,
+  disabled labels 5.31:1, subject text 9.93–10.66:1, boundaries 4.02:1 and focus
+  6.48:1. Original dark forms and selections measured 1.01:1 and 1.20:1.
+- The folder and extracted EXEs produced readable class/teacher exports. All 16
+  extracted-app PDF pages (6 class, 10 teacher) were reopened, rendered with Poppler
+  and visually inspected; representative frozen-app pages were also rendered by
+  PyMuPDF. Shared export presentation code is unchanged.
+- [Windows and Ubuntu CI checks](https://github.com/LaithAlnajjar/school-timetable/actions/runs/40028886828)
+  passed for application source `74349f4`, including pinned installation, dependency
+  consistency, Ruff, formatting and all 61 tests.
+
+Replacement ZIP: `dist/SchoolTimetable-1.0.0-windows-x64.zip`, **94,635,296 bytes**.
+SHA256: `613ad0d84f733f8812a71f5b04f851e056d1e2a55acc12f5a5882427fa74ff7d`.
+Folder: `dist/SchoolTimetable/SchoolTimetable.exe`.
+Build log: `build/interface-build.log`; current native reports are under
+`build/source-interface-final`, `build/packaged-smoke` and `build/extracted-smoke`.
+The extracted checkout is `build/extracted-db9145c249a04b978375d58f15e0eaf5/SchoolTimetable`.
+Full PDF visual evidence is in `build/pdf-visual-final`.
+
+Remaining limits: Windows 10, a pristine machine without developer tools,
+per-monitor DPI changes and Narrator were not exercised; the package remains
+unsigned. The computer-use helper failed during sandbox setup, so visual inspection
+used real native Qt widget captures and separate window-frame geometry checks.
+All authored source and representative documentation images are committed. Generated
+distributions and full test/capture output are ignored. No merges/releases performed.
+
+The sections below retain the earlier integration/startup verification history;
+their previous ZIP sizes and checksums describe superseded builds.
+
+## Earlier integration results
 
 - **48 pytest tests passed** (9.95 seconds in the latest Windows build).
 - Ruff lint and formatting checks passed; `pip check` reported no broken requirements.

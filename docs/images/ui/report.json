@@ -1,0 +1,191 @@
+{
+  "platform": "windows",
+  "windows_app_appearance": "dark",
+  "native_color_scheme_before_theme": "Dark",
+  "color_scheme": "Light",
+  "qt_scale_factor": "1",
+  "screen_dpr": 1.0,
+  "screen_dpi": 96.0,
+  "captures": [
+    "empty-week",
+    "empty-teachers",
+    "empty-classes",
+    "empty-requirements",
+    "empty-generate",
+    "empty-review",
+    "empty-export",
+    "week",
+    "teachers",
+    "classes",
+    "requirements",
+    "generate",
+    "review",
+    "export",
+    "subjects",
+    "generate-advanced",
+    "generate-advanced-bottom",
+    "dialog-teacher",
+    "availability",
+    "dialog-class",
+    "dialog-subject",
+    "dialog-room",
+    "dialog-room-advanced",
+    "dialog-day",
+    "dialog-period",
+    "dialog-requirement",
+    "dialog-requirement-advanced",
+    "invalid-name",
+    "invalid-doubles",
+    "combo-popup",
+    "selection-focused",
+    "selection-inactive",
+    "review-selected",
+    "review-moving",
+    "review-rejected",
+    "review-locked",
+    "review-teacher",
+    "review-school",
+    "review-long-names",
+    "review-actions-bottom",
+    "help",
+    "message-warning",
+    "message-unsaved",
+    "field-focused",
+    "tooltip",
+    "generate-busy",
+    "generate-cancelled",
+    "generate-invalid"
+  ],
+  "window_bounds_issues": [],
+  "available_screen_logical_size": [
+    1920,
+    1032
+  ],
+  "window_logical_size": [
+    1280,
+    860
+  ],
+  "palette": {
+    "Active": {
+      "Window": "#f4f6f9",
+      "WindowText": "#20344d",
+      "Base": "#ffffff",
+      "Text": "#20344d",
+      "Highlight": "#205c86",
+      "HighlightedText": "#ffffff"
+    },
+    "Inactive": {
+      "Window": "#f4f6f9",
+      "WindowText": "#20344d",
+      "Base": "#ffffff",
+      "Text": "#20344d",
+      "Highlight": "#205c86",
+      "HighlightedText": "#ffffff"
+    },
+    "Disabled": {
+      "Window": "#f4f6f9",
+      "WindowText": "#536273",
+      "Base": "#e9edf2",
+      "Text": "#536273",
+      "Highlight": "#205c86",
+      "HighlightedText": "#ffffff"
+    }
+  },
+  "contrast": {
+    "body": {
+      "foreground": "#20344D",
+      "background": "#FFFFFF",
+      "ratio": 12.65
+    },
+    "hint": {
+      "foreground": "#4B5E71",
+      "background": "#F4F6F9",
+      "ratio": 6.18
+    },
+    "selection_active_and_inactive": {
+      "foreground": "#FFFFFF",
+      "background": "#205C86",
+      "ratio": 7.15
+    },
+    "disabled": {
+      "foreground": "#536273",
+      "background": "#E9EDF2",
+      "ratio": 5.31
+    },
+    "boundary": {
+      "foreground": "#718096",
+      "background": "#FFFFFF",
+      "ratio": 4.02
+    },
+    "focus": {
+      "foreground": "#1458A8",
+      "background": "#F4F6F9",
+      "ratio": 6.48
+    },
+    "error": {
+      "foreground": "#A12B24",
+      "background": "#FFF1EF",
+      "ratio": 6.61
+    },
+    "valid": {
+      "foreground": "#215B37",
+      "background": "#EDF7F0",
+      "ratio": 7.32
+    },
+    "moving": {
+      "foreground": "#654700",
+      "background": "#FFF4D6",
+      "ratio": 7.81
+    },
+    "moving_boundary": {
+      "foreground": "#826000",
+      "background": "#FFF4D6",
+      "ratio": 5.29
+    },
+    "scrollbar": {
+      "foreground": "#697D90",
+      "background": "#EDF1F5",
+      "ratio": 3.75
+    },
+    "before_dark_form": {
+      "foreground": "#20344D",
+      "background": "#323232",
+      "ratio": 1.01
+    },
+    "before_selected_lesson": {
+      "foreground": "#F0F0F0",
+      "background": "#CBDFF3",
+      "ratio": 1.2
+    },
+    "subject_1": {
+      "foreground": "#20344D",
+      "background": "#DCEAF8",
+      "ratio": 10.34
+    },
+    "subject_2": {
+      "foreground": "#20344D",
+      "background": "#E3EFDF",
+      "ratio": 10.65
+    },
+    "subject_3": {
+      "foreground": "#20344D",
+      "background": "#F9EACF",
+      "ratio": 10.66
+    },
+    "subject_4": {
+      "foreground": "#20344D",
+      "background": "#ECE2F4",
+      "ratio": 10.09
+    },
+    "subject_5": {
+      "foreground": "#20344D",
+      "background": "#F4DFE1",
+      "ratio": 9.93
+    },
+    "subject_6": {
+      "foreground": "#20344D",
+      "background": "#D9EDEC",
+      "ratio": 10.41
+    }
+  }
+}

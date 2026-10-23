@@ -40,3 +40,6 @@ Build Windows delivery with `powershell -ExecutionPolicy Bypass -File scripts/bu
 The ZIP is `dist/SchoolTimetable-1.0.0-windows-x64.zip`; extract the whole ZIP and open
 SchoolTimetable.exe. See [Windows build details](docs/windows-build.md),
 [actual verification](docs/verification.md), and [observed larger-school timing](docs/performance.md).
+
+The desktop uses one readable light appearance under both Windows light and dark
+settings. See the [interface before/after evidence and scaling checks](docs/ui-verification.md).

@@ -2,6 +2,7 @@
 
 The complete application is on **codex/integration**. Main remains at the original
 commit until the owner merges the reviewed work. No releases have been published.
+The latest interface repair is on **codex/interface-repair**, stacked above integration.
 
 | Order | Pull request | Head branch | Current base |
 |---|---|---|---|
@@ -9,11 +10,14 @@ commit until the owner merges the reviewed work. No releases have been published
 | 2 | [Scheduler and independent validation](https://github.com/LaithAlnajjar/school-timetable/pull/2) | codex/scheduling | codex/project-data |
 | 3 | [Desktop, editing and exports](https://github.com/LaithAlnajjar/school-timetable/pull/3) | codex/desktop | codex/scheduling |
 | 4 | [Windows delivery and final verification](https://github.com/LaithAlnajjar/school-timetable/pull/4) | codex/integration | codex/desktop |
+| 5 | [Readable desktop interface and usability repair](https://github.com/LaithAlnajjar/school-timetable/pull/5) | codex/interface-repair | codex/integration |
 
-Merge #1 into main first. Then retarget #2 to main and merge it; do the same for #3
-and #4 in order. Do not merge a later PR into its feature-branch base if the intention
-is to integrate into main. The final PR includes the packaging smoke and self-review
+Merge #1 into main first. Then retarget #2 to main and merge it; do the same for #3,
+#4 and #5 in order. Do not merge a later PR into its feature-branch base if the intention
+is to integrate into main. PR #4 includes the packaging smoke and self-review
 fixes for fractional search limits and persistent whole-day availability.
+PR #5 adds the explicit light palette, complete UI layout/editing repair and fresh
+native appearance/scaling/build evidence. It preserves all earlier PR dependencies.
 
 All branches have been pushed. The GitHub connector could read repository data but
 lacked PR write permission; PRs were created using the existing authenticated Git

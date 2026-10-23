@@ -112,3 +112,13 @@ The final scale inspection also exposed dynamic Qt notice styles painting colors
 without reserving text padding. Notice margins are now explicit and tested across
 info/success/move/error transitions. Thirteen interface regressions now pass;
 the final full suite contains 61 tests.
+
+**Complete — interface repair and Windows delivery.** Final native captures cover
+all seven workflow pages and their important states under actual light/dark app
+appearance and Qt 100/125/150/200% scale factors. All final frames fit the desktop.
+All 61 tests, Ruff, exact dependency pins and pip consistency pass. Source, rebuilt
+folder and freshly extracted ZIP pass native workflow smoke. Six class and ten
+teacher PDF pages were rendered with Poppler and visually inspected. Windows and
+Ubuntu CI pass for built application source `74349f4`. PR #5 remains stacked on #4;
+no earlier PR dependencies were changed and no merges/releases were performed.
+See ui-verification.md and verification.md for evidence, checksum and honest limits.
