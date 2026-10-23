@@ -59,6 +59,9 @@ the `SchoolTimetable-windows-x64` artifact. It contains the distributable ZIP; e
 the artifact wrapper first, then the application ZIP. The workflow also uploads smoke
 reports. Creating a workflow is distinct from observing it succeed; actual run status
 is recorded in verification.md. PRs and releases remain for the repository owner to merge/publish.
+Source/build changes pushed to `codex/integration` also run packaging, allowing the
+complete distributable to be verified in Windows CI before any PR is merged.
+Documentation-only pushes do not rerun this packaging job.
 
 The exact dependency locks are tracked; EXE/ZIP/build outputs, caches, logs and real
 school projects are ignored. Source builds reproduce the process, not necessarily

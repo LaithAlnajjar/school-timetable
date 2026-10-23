@@ -1,8 +1,23 @@
 name: Package Windows
 on:
   workflow_dispatch:
+  push:
+    branches: [codex/integration]
+    paths:
+      - 'src/**'
+      - 'packaging/**'
+      - 'scripts/build-windows.ps1'
+      - 'scripts/bundle_licenses.py'
+      - 'scripts/check_packaged.py'
+      - 'scripts/launch.py'
+      - 'requirements*.txt'
+      - 'pyproject.toml'
+      - '.github/workflows/package-windows.yml'
 permissions:
   contents: read
+concurrency:
+  group: package-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   package:
     runs-on: windows-latest

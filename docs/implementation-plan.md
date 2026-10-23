@@ -63,3 +63,5 @@ the corrected folder and extracted ZIP were rebuilt and passed native smoke agai
 CI workflows are configured for PR/main Windows/Linux checks and manual Windows
 artifact packaging. Actual remote CI status and remaining review are recorded in
 verification.md after the final integration PR is opened. No merges/releases performed.
+Integration source/build pushes additionally trigger the same Windows packaging job;
+this permits pre-merge CI verification while manual dispatch awaits default-branch registration.
