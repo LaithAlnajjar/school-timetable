@@ -4,9 +4,9 @@
    storage/recovery, examples, repository conventions and pinned environment.
 2. **Complete — scheduling.** CP-SAT constraints/preferences, preflight, independent
    schedule validation, locks, cancellation and representative benchmark.
-3. **In progress — desktop workflow.** Guided Qt setup, responsive generation, shared
+3. **Complete — desktop workflow.** Guided Qt setup, responsive generation, shared
    views, atomic manual edits/undo, Excel/Qt PDF exports and user guide.
-4. **Pending — Windows delivery.** PyInstaller folder build, reproducible scripts,
+4. **Next — Windows delivery.** PyInstaller folder build, reproducible scripts,
    Windows/Linux checks, manual packaging CI, smoke/visual QA and final audit.
 
 The checkout began clean at `7048b84` on `main`; origin's default is `main`.
@@ -37,4 +37,14 @@ projections, validated XLSX/Qt PDF exports. 32 tests passed. Representative norm
 and long-name PDFs rendered and visually inspected; repeated headers, readable
 fixed font and paginated day columns. Windows offscreen tests explicitly load system
 fonts; text extraction normalizes PDF whitespace. Names are limited to 180 characters
-(period names 60) for readable output. UI and recovery integration remain next.
+(period names 60) for readable output.
+
+Desktop integration: guided setup/forms/checklist, class/teacher loads, advanced
+availability/limits/rooms, actual QThread generation/cancellation and revision guards,
+shared school/class/teacher review with atomic block editing/locks/undo, current-state
+exports, safe Save/Open/Save As, unsaved prompts, debounced/30-second recovery, per-window
+recovery locks, rotating logs and built-in plain-English help. Backup files open as copies.
+41 tests passed including the Qt workflow, responsive event loop, stale results,
+failure preservation, autosave, current edited exports and both PDF pagination axes.
+Synthetic screenshots in docs/images were visually inspected; row heights account for
+wrapped room/double/lock labels. Packaging, CI and packaged smoke remain next.

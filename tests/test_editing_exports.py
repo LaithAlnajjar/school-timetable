@@ -158,3 +158,25 @@ def test_long_names_and_many_rows_repeat_pdf_headers(tmp_path, qapp):
     pages = PdfReader(target).pages
     assert len(pages) == 3  # 3 + 3 + 2 day columns, fixed readable font
     assert all("Example school" in " ".join(page.extract_text().split()) for page in pages)
+
+
+def test_vertical_pdf_pagination_keeps_all_periods(tmp_path, qapp):
+    p = editable()
+    for i in range(20):
+        start = 10 * 60 + 15 + i * 30
+        end = start + 30
+        p.days[0].slots.append(
+            Slot(
+                f"extra{i}",
+                f"Extra period {i}",
+                f"{start // 60:02}:{start % 60:02}",
+                f"{end // 60:02}:{end % 60:02}",
+            )
+        )
+    target = tmp_path / "tall.pdf"
+    export_pdf(p, target)
+    pages = PdfReader(target).pages
+    assert len(pages) >= 2
+    text = " ".join(" ".join(page.extract_text().split()) for page in pages)
+    assert "Extra period 19" in text
+    assert all("Example school" in " ".join(page.extract_text().split()) for page in pages)

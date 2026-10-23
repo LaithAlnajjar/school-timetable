@@ -16,7 +16,22 @@ python -m venv .venv
 .venv\Scripts\python -m pip install -r requirements-dev.txt
 .venv\Scripts\python -m pip install --no-deps --no-build-isolation -e .
 .venv\Scripts\python -m pytest
+.venv\Scripts\python -m school_timetable
 ```
 
 Synthetic example project files are in `examples/`. Real school files, exports,
 logs and distribution bundles are ignored by Git.
+
+See the [plain-English user guide](src/school_timetable/resources/guide.md) (also available
+inside Help). The synthetic example is available from **Load example school**. All
+class, teacher and school views use the current edited schedule. Search outcomes are
+reported separately; a feasible result is usable before preferences are fully optimized.
+
+![Timetable review](docs/images/review.png)
+
+Architecture: `models` and `validation` are independent of Qt; `scheduler` contains
+the CP-SAT model; `storage` handles strict JSON/atomic files; `editing` applies atomic
+validated moves/swaps; `views` projects the schedule; `exports` writes XLSX and Qt PDF;
+`session` owns document revisions/history; `ui` handles the guided desktop workflow.
+Local recovery files and rotating logs are in Windows LocalAppData under
+`SchoolTimetable/School Timetable`. User projects are saved wherever the user chooses.

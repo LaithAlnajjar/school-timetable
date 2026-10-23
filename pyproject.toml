@@ -15,6 +15,9 @@ school-timetable = "school_timetable.__main__:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+school_timetable = ["resources/*.md"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
