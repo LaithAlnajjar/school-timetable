@@ -220,3 +220,16 @@ def test_ui_exports_selected_teacher_pdf_and_all_classes_excel(window, qapp, mon
     window.export_current()
     assert len(PdfReader(pdf).pages) == 2
     assert window.session.dirty  # Export includes unsaved edits but is not a project save.
+
+
+def test_fractional_search_limit_matches_project_and_roundtrips(window, tmp_path):
+    p = example_school()
+    p.settings.time_limit = 0.05
+    window.replace_project(p)
+    assert window.search_limit.value() == 0.05
+    assert p.settings.time_limit == 0.05
+    window.search_limit.setValue(1.25)
+    assert p.settings.time_limit == 1.25
+    target = tmp_path / "fractional.schooltimetable"
+    assert window.save_to(target)
+    assert load_project(target).settings.time_limit == 1.25

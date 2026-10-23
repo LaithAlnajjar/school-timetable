@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QDialog,
+    QDoubleSpinBox,
     QFileDialog,
     QGroupBox,
     QHBoxLayout,
@@ -24,7 +25,6 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPushButton,
     QScrollArea,
-    QSpinBox,
     QStackedWidget,
     QTableWidgetItem,
     QTabWidget,
@@ -57,7 +57,8 @@ QPushButton:hover { background: #EAF0F8; border-color: #6F91B5; }
 QPushButton:disabled { color: #8D98A6; background: #F1F3F6; }
 QPushButton#primary { background: #245C8A; color: white; border: none; font-weight: 600; }
 QPushButton#primary:hover { background: #19466B; }
-QLineEdit, QComboBox, QSpinBox, QTimeEdit { background: white; border: 1px solid #C5CFDC;
+QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox, QTimeEdit {
+background: white; border: 1px solid #C5CFDC;
                                        border-radius: 4px; padding: 5px; min-height: 23px; }
 QTableWidget, QTreeWidget, QTextBrowser { background: white; border: 1px solid #D8E0EA;
                             gridline-color: #DCE3EC; selection-background-color: #CBDFF3; }
@@ -304,8 +305,10 @@ class MainWindow(QMainWindow):
         )
         row = QHBoxLayout()
         row.addWidget(label("Search limit in seconds"))
-        self.search_limit = QSpinBox()
-        self.search_limit.setRange(1, 3600)
+        self.search_limit = QDoubleSpinBox()
+        self.search_limit.setRange(0.01, 3600)
+        self.search_limit.setDecimals(2)
+        self.search_limit.setSingleStep(5)
         self.search_limit.valueChanged.connect(self.settings_changed)
         row.addWidget(self.search_limit)
         row.addStretch()
@@ -479,7 +482,7 @@ class MainWindow(QMainWindow):
         if not self.project.requirements:
             loads.append("\nNo lesson requirements yet. Use Add lesson requirement to begin.")
         self.loads.setPlainText("\n".join(loads))
-        self.search_limit.setValue(round(self.project.settings.time_limit))
+        self.search_limit.setValue(self.project.settings.time_limit)
         self.rooms_enabled.setChecked(self.project.settings.rooms_enabled)
         self.reduce_gaps.setChecked(self.project.settings.reduce_gaps)
         self.rendering = False
