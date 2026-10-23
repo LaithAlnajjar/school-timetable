@@ -1,0 +1,16 @@
+-r requirements.txt
+ruff==0.14.14
+pytest==9.0.2
+pyinstaller==6.18.0
+pyinstaller-hooks-contrib==2026.9
+altgraph==0.17.5
+setuptools==84.2.1
+packaging==26.3
+pefile==2024.8.26; sys_platform == 'win32'
+pywin32-ctypes==0.2.3; sys_platform == 'win32'
+colorama==0.4.6; sys_platform == 'win32'
+iniconfig==2.3.1
+pluggy==1.7.0
+Pygments==2.21.0
+pypdf==6.6.2
+PyMuPDF==1.26.7
