@@ -41,11 +41,18 @@ def validate_setup(project: Project) -> list[Issue]:
                 name = record.name.strip().casefold()
                 if not name:
                     error(collection, "Please enter a name.")
+                if len(record.name) > 180:
+                    error(
+                        collection,
+                        "Please shorten names to 180 characters for readable timetables.",
+                    )
                 if name in names:
                     error(collection, f"The name '{record.name}' is already used here.")
                 names.add(name)
     if not project.school_name.strip():
         error("school_name", "Enter the school name.")
+    if len(project.school_name) > 180:
+        error("school_name", "Please shorten the school name to 180 characters.")
     if not project.days:
         error("days", "Add at least one school day and its teaching slots.")
     for d, day in enumerate(project.days):
@@ -57,6 +64,8 @@ def validate_setup(project: Project) -> list[Issue]:
             seen.add(slot.id)
             if not slot.name.strip():
                 error(where, f"{day.name}: enter a period name.")
+            if len(slot.name) > 60:
+                error(where, f"{day.name}: shorten period names to 60 characters.")
             try:
                 start, end = minutes(slot.start), minutes(slot.end)
             except ValueError as exc:

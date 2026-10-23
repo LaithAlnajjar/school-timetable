@@ -4,7 +4,7 @@
    storage/recovery, examples, repository conventions and pinned environment.
 2. **Complete — scheduling.** CP-SAT constraints/preferences, preflight, independent
    schedule validation, locks, cancellation and representative benchmark.
-3. **Next — desktop workflow.** Guided Qt setup, responsive generation, shared
+3. **In progress — desktop workflow.** Guided Qt setup, responsive generation, shared
    views, atomic manual edits/undo, Excel/Qt PDF exports and user guide.
 4. **Pending — Windows delivery.** PyInstaller folder build, reproducible scripts,
    Windows/Linux checks, manual packaging CI, smoke/visual QA and final audit.
@@ -31,3 +31,10 @@ cancel-before/during search and controlled solver-status regression tests. No in
 project is mutated by generation. CP-SAT uses four workers and seed 42; valid feasible
 results remain usable before preference optimality is proved. Hard infeasibility gets
 honest suggestions rather than an unproved exact diagnosis. See performance.md.
+
+Desktop foundation: atomic moves/swaps, bounded undo/redo, shared class/teacher
+projections, validated XLSX/Qt PDF exports. 32 tests passed. Representative normal
+and long-name PDFs rendered and visually inspected; repeated headers, readable
+fixed font and paginated day columns. Windows offscreen tests explicitly load system
+fonts; text extraction normalizes PDF whitespace. Names are limited to 180 characters
+(period names 60) for readable output. UI and recovery integration remain next.
