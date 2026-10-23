@@ -107,3 +107,8 @@ Native window-boundary checks then caught advanced forms expanding below the
 desktop at 100–150%. Expansion now repositions the entire frame into the available
 screen, preserving visible Save/Cancel. A twelfth interface regression covers this;
 all 12 interface checks and the native 100% capture pass with no out-of-bounds windows.
+
+The final scale inspection also exposed dynamic Qt notice styles painting colors
+without reserving text padding. Notice margins are now explicit and tested across
+info/success/move/error transitions. Thirteen interface regressions now pass;
+the final full suite contains 61 tests.

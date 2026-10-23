@@ -85,7 +85,7 @@ QLabel#hint { color: #4B5E71; }
 QLabel#fieldError { color: #A12B24; padding: 6px; }
 QLabel[notice="true"] {
     background: #E6EEF6; color: #20344D; border: 1px solid #718096;
-    border-radius: 4px; padding: 9px;
+    border-radius: 4px;
 }
 QLabel[tone="success"] { background: #EDF7F0; color: #215B37; border: 1px solid #377C55; }
 QLabel[tone="error"] { background: #FFF1EF; color: #A12B24; border: 1px solid #A12B24; }
@@ -214,10 +214,14 @@ def apply_theme(app: QApplication):
 def status(widget, text, tone="info"):
     """A visible message always explains the state in words as well as color."""
     widget.setText(text)
+    # Qt can repaint a dynamic stylesheet property without refreshing its box
+    # geometry. A QLabel margin reserves readable space through every state.
+    widget.setMargin(10)
     widget.setVisible(bool(text))
     widget.setAccessibleDescription(text)
     widget.setProperty("notice", True)
     widget.setProperty("tone", tone)
     widget.style().unpolish(widget)
     widget.style().polish(widget)
+    widget.updateGeometry()
     widget.update()

@@ -283,3 +283,18 @@ def test_expanding_advanced_dialog_keeps_save_and_cancel_on_screen(qapp):
     assert available.contains(dialog.frameGeometry())
     assert dialog.buttons.isVisible()
     dialog.reject()
+
+
+def test_status_transitions_reserve_text_padding_after_polish(qapp):
+    from PySide6.QtWidgets import QLabel
+    from school_timetable.ui.theme import status
+
+    label = QLabel()
+    label.setWordWrap(True)
+    label.show()
+    for tone in ("info", "success", "moving", "error", "info"):
+        status(label, "First line\nSecond line", tone)
+        QTest.qWait(5)
+        assert label.sizeHint().height() >= 2 * label.fontMetrics().height() + 20
+        assert label.margin() >= 10
+    label.close()
