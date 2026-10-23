@@ -12,7 +12,7 @@ from enum import StrEnum
 
 from ortools.sat.python import cp_model
 
-from .models import Lesson, Project, chains, lesson_blocks, teaching_slots
+from .models import Lesson, Project, chains, lesson_blocks, teaching_slots, unavailable_slots
 from .validation import Issue, requirement_name, validate_schedule, validate_setup
 
 
@@ -42,9 +42,15 @@ class SolveResult:
 
 def placements(project: Project, requirement, length):
     teacher = project.lookup("teachers", requirement.teacher_id)
+    blocked = unavailable_slots(project, teacher)
     room_ids = (
         requirement.room_ids if project.settings.rooms_enabled and requirement.room_ids else [None]
     )
+    room_blocked = {
+        room_id: unavailable_slots(project, project.lookup("rooms", room_id))
+        for room_id in room_ids
+        if room_id is not None
+    }
     for d, day in enumerate(project.days):
         for i, slot in enumerate(day.slots):
             block = day.slots[i : i + length]
@@ -53,11 +59,10 @@ def placements(project: Project, requirement, length):
             if length == 2 and slot.end != block[1].start:
                 continue
             ids = [s.id for s in block]
-            if any(sid in teacher.unavailable for sid in ids):
+            if any(sid in blocked for sid in ids):
                 continue
             for room_id in room_ids:
-                room = project.lookup("rooms", room_id) if room_id else None
-                if room and any(sid in room.unavailable for sid in ids):
+                if room_id and any(sid in room_blocked[room_id] for sid in ids):
                     continue
                 yield d, ids, room_id
 
@@ -78,18 +83,19 @@ def preflight(project: Project) -> list[Issue]:
                 f"{group.name} needs {required} periods but has only {len(slots)} teaching slots."
             )
     for teacher in project.teachers:
+        blocked = unavailable_slots(project, teacher)
         required = sum(r.periods for r in project.requirements if r.teacher_id == teacher.id)
-        available = sum(s.id not in teacher.unavailable for s in slots)
+        available = sum(s.id not in blocked for s in slots)
         capacity = 0
         for day in project.days:
-            daily = sum(s.teaching and s.id not in teacher.unavailable for s in day.slots)
+            daily = sum(s.teaching and s.id not in blocked for s in day.slots)
             if teacher.max_consecutive is not None:
                 # Availability splits teaching runs too. This is an upper bound on capacity.
                 daily = 0
                 for chain in chains(day):
                     run = 0
                     for slot in chain + [None]:
-                        if slot and slot.id not in teacher.unavailable:
+                        if slot and slot.id not in blocked:
                             run += 1
                         else:
                             daily += run - run // (teacher.max_consecutive + 1)

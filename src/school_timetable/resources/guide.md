@@ -8,6 +8,7 @@ you. Save it in Documents or another folder you can find again.
    Copy a daily pattern to other days, then adjust them. Breaks and lunch never hold lessons.
 2. **Teachers:** add teachers' names. Advanced rules are optional: mark unavailable
    days/periods and set daily or consecutive teaching limits only when needed.
+   A whole-day block stays in force if you later add or copy periods on that day.
 3. **Classes & subjects:** add teaching groups (for example 7A) and subjects. Year
    groups are optional labels. Renaming a record keeps its lesson assignments.
 4. **Lesson requirements:** add one row for each class and subject. Choose the

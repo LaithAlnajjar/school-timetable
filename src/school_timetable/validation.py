@@ -6,7 +6,15 @@ import re
 from collections import Counter, defaultdict
 from dataclasses import dataclass
 
-from .models import Lesson, Project, chains, lesson_blocks, slot_index, teaching_slots
+from .models import (
+    Lesson,
+    Project,
+    chains,
+    lesson_blocks,
+    slot_index,
+    teaching_slots,
+    unavailable_slots,
+)
 
 
 @dataclass(frozen=True)
@@ -82,9 +90,12 @@ def validate_setup(project: Project) -> list[Issue]:
         error("days", "Add at least one teaching slot. Breaks cannot hold lessons.")
     for collection in ("teachers", "rooms"):
         for record in getattr(project, collection):
-            unknown = set(record.unavailable) - slots.keys()
+            unknown = set(record.unavailable) - (slots.keys() | {day.id for day in project.days})
             if unknown:
-                error(collection, f"{record.name}: unavailable periods refer to removed slots.")
+                error(
+                    collection,
+                    f"{record.name}: unavailable days or periods refer to removed entries.",
+                )
             if len(record.unavailable) != len(set(record.unavailable)):
                 error(collection, f"{record.name}: unavailable periods contain duplicates.")
     for teacher in project.teachers:
@@ -165,6 +176,8 @@ def validate_schedule(
     teacher_days: Counter = Counter()
     subject_days: Counter = Counter()
     teacher_slots: dict[str, set[str]] = defaultdict(set)
+    teacher_blocked = {t.id: unavailable_slots(project, t) for t in project.teachers}
+    room_blocked = {r.id: unavailable_slots(project, r) for r in project.rooms}
 
     def error(text):
         issues.append(Issue("schedule", text))
@@ -210,9 +223,9 @@ def validate_schedule(
             where = f"{day.name}, {slot.name} ({slot.start})"
             if not slot.teaching:
                 error(f"{label}: {where} is a break or blocked period.")
-            if sid in teacher.unavailable:
+            if sid in teacher_blocked[teacher.id]:
                 error(f"{teacher.name} is unavailable at {where}.")
-            if project.settings.rooms_enabled and room and sid in room.unavailable:
+            if project.settings.rooms_enabled and room and sid in room_blocked[room.id]:
                 error(f"{room.name} is unavailable at {where}.")
             resources = [
                 ("class", r.class_id, project.lookup("classes", r.class_id).name),

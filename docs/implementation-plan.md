@@ -56,6 +56,10 @@ was traced to Poppler's foreign ICU DLL; the spec/PATH isolation now prevents it
 Final ZIP extracted smoke passed, with actual Qt Windows platform and bundled Python.
 42 local tests, Ruff lint/format, pip consistency, source smoke and folder/ZIP smoke
 passed. PDF pages from the packaged app were rendered and visually inspected.
+Final self-review fixes: the desktop preserves fractional search limits, and whole-day
+teacher/room absences follow stable day IDs when periods are added or copied. Individual
+slot restrictions remain supported without a file-schema migration. 46 tests now pass;
+the corrected folder and extracted ZIP were rebuilt and passed native smoke again.
 CI workflows are configured for PR/main Windows/Linux checks and manual Windows
 artifact packaging. Actual remote CI status and remaining review are recorded in
 verification.md after the final integration PR is opened. No merges/releases performed.

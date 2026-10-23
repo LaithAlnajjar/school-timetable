@@ -162,7 +162,13 @@ def test_forms_inline_validation_and_day_availability(qapp):
     assert "already" in dialog.error.text()
     tree = AvailabilityTree(p, [])
     tree.topLevelItem(0).setCheckState(0, Qt.CheckState.Checked)
-    assert set(tree.selected()) == {s.id for s in p.days[0].slots if s.teaching}
+    assert tree.selected() == [p.days[0].id]
+    restored_tree = AvailabilityTree(p, tree.selected())
+    assert restored_tree.selected() == [p.days[0].id]
+    restored_tree.topLevelItem(0).child(0).setCheckState(0, Qt.CheckState.Unchecked)
+    assert set(restored_tree.selected()) == {s.id for s in p.days[0].slots if s.teaching} - {
+        p.days[0].slots[0].id
+    }
     requirement = RequirementDialog(p, p.requirements[0])
     requirement.doubles.setValue(3)
     requirement.accept()

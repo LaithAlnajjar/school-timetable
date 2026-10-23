@@ -32,7 +32,7 @@ class Day:
 class Teacher:
     id: str = field(default_factory=new_id)
     name: str = ""
-    unavailable: list[str] = field(default_factory=list)
+    unavailable: list[str] = field(default_factory=list)  # Stable day IDs and/or slot IDs.
     max_daily: int | None = None
     max_consecutive: int | None = None
 
@@ -54,7 +54,7 @@ class Subject:
 class Room:
     id: str = field(default_factory=new_id)
     name: str = ""
-    unavailable: list[str] = field(default_factory=list)
+    unavailable: list[str] = field(default_factory=list)  # Stable day IDs and/or slot IDs.
 
 
 @dataclass
@@ -119,6 +119,14 @@ def slot_index(project: Project) -> dict[str, tuple[int, int, Slot]]:
 
 def teaching_slots(project: Project) -> list[Slot]:
     return [s for day in project.days for s in day.slots if s.teaching]
+
+
+def unavailable_slots(project: Project, record: Teacher | Room) -> set[str]:
+    """Expand whole-day restrictions against the current week, including new periods."""
+    ids = set(record.unavailable)
+    return {
+        slot.id for day in project.days for slot in day.slots if day.id in ids or slot.id in ids
+    }
 
 
 def chains(day: Day) -> list[list[Slot]]:

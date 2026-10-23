@@ -100,13 +100,18 @@ class AvailabilityTree(QTreeWidget):
         self.setMinimumHeight(160)
         self.setMaximumHeight(270)
         self.slot_items = []
+        self.day_items = []
+        self.hidden_slots = []
         known = set()
         for day in project.days:
+            known.add(day.id)
             parent = QTreeWidgetItem([day.name + " (select to block the whole day)"])
             parent.setFlags(
                 parent.flags() | Qt.ItemFlag.ItemIsAutoTristate | Qt.ItemFlag.ItemIsUserCheckable
             )
             self.addTopLevelItem(parent)
+            parent.setData(0, Qt.ItemDataRole.UserRole, day.id)
+            self.day_items.append((day.id, parent))
             for slot in day.slots:
                 known.add(slot.id)
                 if slot.teaching:
@@ -115,19 +120,35 @@ class AvailabilityTree(QTreeWidget):
                     item.setCheckState(
                         0,
                         Qt.CheckState.Checked
-                        if slot.id in unavailable
+                        if slot.id in unavailable or day.id in unavailable
                         else Qt.CheckState.Unchecked,
                     )
                     self.slot_items.append((slot.id, item))
-        for sid in set(unavailable) - known:
-            item = QTreeWidgetItem(["Removed period - uncheck this obsolete restriction"])
+                elif slot.id in unavailable:
+                    self.hidden_slots.append((day.id, slot.id))
+            if day.id in unavailable:
+                parent.setCheckState(0, Qt.CheckState.Checked)
+        for sid in sorted(set(unavailable) - known):
+            item = QTreeWidgetItem(["Removed day or period - uncheck this obsolete restriction"])
             item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
             item.setCheckState(0, Qt.CheckState.Checked)
             self.addTopLevelItem(item)
             self.slot_items.append((sid, item))
 
     def selected(self):
-        return [sid for sid, item in self.slot_items if item.checkState(0) == Qt.CheckState.Checked]
+        days = [
+            day_id for day_id, item in self.day_items if item.checkState(0) == Qt.CheckState.Checked
+        ]
+        periods = [
+            sid
+            for sid, item in self.slot_items
+            if item.checkState(0) == Qt.CheckState.Checked
+            and (
+                item.parent() is None or item.parent().data(0, Qt.ItemDataRole.UserRole) not in days
+            )
+        ]
+        hidden = [sid for day_id, sid in self.hidden_slots if day_id not in days]
+        return days + periods + hidden
 
 
 def limit_spin(value=None):
@@ -168,7 +189,10 @@ class RecordDialog(FormDialog):
         if collection in ("teachers", "rooms"):
             advanced = self.advanced()
             advanced.addRow(
-                label("Mandatory when configured. Checked days or periods are unavailable.")
+                label(
+                    "Mandatory when configured. A checked whole day stays unavailable "
+                    "if periods are added or copied later. Individual periods can also be blocked."
+                )
             )
             self.availability = AvailabilityTree(project, record.unavailable)
             advanced.addRow("Unavailable", self.availability)

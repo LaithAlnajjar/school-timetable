@@ -15,6 +15,7 @@ from school_timetable.models import (
     Slot,
     Subject,
     Teacher,
+    new_id,
 )
 from school_timetable.scheduler import Outcome, Scheduler, preflight
 from school_timetable.validation import validate_schedule
@@ -87,6 +88,56 @@ def test_teacher_availability_daily_consecutive_and_room_unavailability():
         if lesson.room_id:
             assert not set(lesson.slot_ids) & set(p.rooms[0].unavailable)
     assert validate_schedule(p) == []
+    taught = {
+        sid
+        for lesson in p.lessons
+        if p.lookup("requirements", lesson.requirement_id).teacher_id == teacher.id
+        for sid in lesson.slot_ids
+    }
+    for day in p.days:
+        assert sum(slot.id in taught for slot in day.slots) <= 4
+        run, previous_end = 0, None
+        for slot in day.slots:
+            if not slot.teaching or previous_end != slot.start:
+                run = 0
+            run = run + 1 if slot.teaching and slot.id in taught else 0
+            assert run <= 2
+            previous_end = slot.end if slot.teaching else None
+
+
+def test_whole_day_restrictions_cover_added_and_copied_periods():
+    p = fast_example()
+    p.teachers[0].unavailable = [p.days[0].id]
+    p.rooms[0].unavailable = [p.days[1].id]
+    p.days[0].slots.append(Slot("new-period", "New period", "13:30", "14:15"))
+    # Replacing a daily pattern changes slot IDs, while its day identity remains stable.
+    for slot in p.days[1].slots:
+        slot.id = new_id()
+    result = Scheduler().solve(p)
+    assert result.usable
+    unavailable_teacher = {slot.id for slot in p.days[0].slots}
+    unavailable_room = {slot.id for slot in p.days[1].slots}
+    for lesson in result.lessons:
+        r = p.lookup("requirements", lesson.requirement_id)
+        if r.teacher_id == p.teachers[0].id:
+            assert not set(lesson.slot_ids) & unavailable_teacher
+        if lesson.room_id == p.rooms[0].id:
+            assert not set(lesson.slot_ids) & unavailable_room
+    assert validate_schedule(p, result.lessons) == []
+
+
+def test_day_restrictions_in_capacity_and_independent_validation():
+    p = solved()
+    lesson = p.lessons[0]
+    r = p.lookup("requirements", lesson.requirement_id)
+    teacher = p.lookup("teachers", r.teacher_id)
+    day = next(day for day in p.days if any(s.id == lesson.slot_ids[0] for s in day.slots))
+    teacher.unavailable = [day.id]
+    assert any(
+        teacher.name in i.message and "unavailable" in i.message for i in validate_schedule(p)
+    )
+    teacher.unavailable = [day.id for day in p.days]
+    assert any(teacher.name in i.message and "only 0" in i.message for i in preflight(p))
 
 
 def test_independent_validator_rejects_bad_counts_clashes_availability_and_breaks():

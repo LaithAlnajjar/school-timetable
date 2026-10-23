@@ -103,3 +103,14 @@ def test_failed_atomic_replacement_preserves_project_and_cleans_temp(tmp_path, m
     assert target.read_bytes() == original
     assert target.with_suffix(".schooltimetable.bak").read_bytes() == original
     assert not list(tmp_path.glob(".term.*"))
+
+
+def test_day_and_slot_availability_roundtrip(tmp_path):
+    p = example_school()
+    p.teachers[0].unavailable = [p.days[0].id, p.days[1].slots[0].id]
+    p.rooms[0].unavailable = [p.days[2].id]
+    target = tmp_path / "days.schooltimetable"
+    save_project(p, target)
+    restored = load_project(target)
+    assert restored == p
+    assert validate_setup(restored) == []

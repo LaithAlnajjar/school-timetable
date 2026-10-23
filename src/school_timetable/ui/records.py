@@ -8,7 +8,16 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ..models import Room, SchoolClass, Subject, Teacher, delete_record, references, teaching_slots
+from ..models import (
+    Room,
+    SchoolClass,
+    Subject,
+    Teacher,
+    delete_record,
+    references,
+    teaching_slots,
+    unavailable_slots,
+)
 from .dialogs import RecordDialog, button, label, readonly_table
 
 
@@ -59,7 +68,8 @@ class RecordsPanel(QWidget):
             detail = ""
             if self.collection == "teachers":
                 count = sum(r.periods for r in p.requirements if r.teacher_id == record.id)
-                available = sum(s.id not in record.unavailable for s in teaching_slots(p))
+                blocked = unavailable_slots(p, record)
+                available = sum(s.id not in blocked for s in teaching_slots(p))
                 detail = f"{count} assigned periods / {available} available"
                 if record.max_daily:
                     detail += f" | daily limit {record.max_daily}"
@@ -72,7 +82,7 @@ class RecordsPanel(QWidget):
                     f"{len(teaching_slots(p))} available"
                 )
             elif self.collection == "rooms":
-                detail = f"{len(record.unavailable)} unavailable periods"
+                detail = f"{len(record.unavailable)} unavailable day/period restrictions"
             for col, text in enumerate((record.name, detail)):
                 item = QTableWidgetItem(text)
                 item.setData(Qt.ItemDataRole.UserRole, record.id)

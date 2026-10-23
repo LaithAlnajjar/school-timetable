@@ -79,8 +79,8 @@ def run_smoke(app, window, output: Path):
                 p.settings.time_limit = 3
                 p.teachers[0].max_daily = 4
                 p.teachers[0].max_consecutive = 2
-                p.teachers[0].unavailable = [s.id for s in p.days[0].slots if s.teaching]
-                p.rooms[0].unavailable = [s.id for s in p.days[1].slots if s.teaching]
+                p.teachers[0].unavailable = [p.days[0].id]
+                p.rooms[0].unavailable = [p.days[1].id]
                 window.replace_project(p, dirty=True)
                 window.generate()
                 state["phase"] = "first"

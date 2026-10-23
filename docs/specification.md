@@ -17,6 +17,8 @@ availability, configured daily/consecutive teacher limits, daily subject caps, d
 blocks, enabled room restrictions and locks. Doubles count twice, stay in one room and
 must be adjacent in real time without breaks. Optional preferences spread subjects and
 reduce idle gaps. Disabled room scheduling needs no room data.
+Whole-day availability restrictions use stable day IDs and cover periods added later;
+individual-period restrictions remain tied to their stable period IDs.
 
 Generation runs off the Qt UI thread on a snapshot, supports cancellation and a search
 limit, and reports feasible/optimal, impossible, timeout, cancelled or error honestly.
