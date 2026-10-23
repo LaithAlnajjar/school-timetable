@@ -39,16 +39,31 @@ Build/test artifacts and smoke reports are in ignored `build/` and `dist/` folde
 
 ## Remote review and remaining limits
 
-Final integration branch: `codex/integration`. Review order: project-data PR #1,
-scheduler PR #2, desktop PR #3, then integration/packaging PR. These branches are
-stacked; the complete application is on the integration branch. Initial Windows and
-Ubuntu PR checks passed in [Actions run 39975462459](https://github.com/LaithAlnajjar/school-timetable/actions/runs/39975462459).
-Later correctness fixes run through CI again before final review. The manual packaging
-dispatch returned HTTP 404 because its workflow is not yet on main; no successful manual
-CI packaging run is claimed. The local Windows package has been built and exercised.
+Final integration branch: `codex/integration`. Review/merge order is documented in
+[review-order.md](review-order.md); all four PRs are open and stacked.
 
-Windows 10 minimum support follows the pinned Qt platform requirement, but only
-Windows 11 was exercised locally. No pristine Windows VM, signing certificate or
+**Observed GitHub Actions results on application source at `d1560d3`:**
+
+- [Windows and Ubuntu checks](https://github.com/LaithAlnajjar/school-timetable/actions/runs/39978302172)
+  both succeeded, including installation, dependency consistency, Ruff and all 46 tests.
+- [Windows packaging](https://github.com/LaithAlnajjar/school-timetable/actions/runs/39978295834)
+  succeeded, including 46 tests, PyInstaller build, native GUI folder smoke, ZIP creation,
+  extraction, native GUI smoke again, and uploads of the distributable and smoke reports.
+  This hosted build used Python 3.12.10. Folder smoke took 1.578 seconds (42 heartbeats),
+  extracted smoke 1.547 seconds (43 heartbeats), both on the native Windows Qt platform.
+- [CI distributable artifact](https://github.com/LaithAlnajjar/school-timetable/actions/runs/39978295834/artifacts/12512875530)
+  and [smoke reports](https://github.com/LaithAlnajjar/school-timetable/actions/runs/39978295834/artifacts/12511464540)
+  were uploaded successfully. The artifact wrapper contains the application ZIP.
+  The CI application ZIP's SHA256 is `70fca5bcf2c5d7ab263762df81b16d58a65de2647f62ba300c8a0eea0c934b72`;
+  its bytes differ from the local Python 3.12.14 build and timestamps.
+
+The initial manual dispatch attempt returned HTTP 404 because the workflow is not yet
+on main. The successful packaging run above used the integration push trigger. Manual
+dispatch becomes available after merging the workflow into main; no merge was performed.
+
+Windows 10 minimum support follows the pinned Qt platform requirement, but Windows 10
+was not exercised. Local Windows 11 and hosted Windows CI were tested. No pristine
+Windows desktop without developer tools, signing certificate or
 single-file EXE was used. No claim of unlimited school size or instant optimization.
 Hard infeasibility explanations are suggestions when an exact conflict was not isolated.
 Setup changes clear timetable edit history. The program uses one shared weekly grid.

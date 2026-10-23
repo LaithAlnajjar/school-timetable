@@ -6,7 +6,7 @@
    schedule validation, locks, cancellation and representative benchmark.
 3. **Complete — desktop workflow.** Guided Qt setup, responsive generation, shared
    views, atomic manual edits/undo, Excel/Qt PDF exports and user guide.
-4. **Local delivery complete; CI review pending — Windows delivery.** PyInstaller folder build, reproducible scripts,
+4. **Complete — Windows delivery.** PyInstaller folder build, reproducible scripts,
    Windows/Linux checks, manual packaging CI, smoke/visual QA and final audit.
 
 The checkout began clean at `7048b84` on `main`; origin's default is `main`.
@@ -65,3 +65,8 @@ artifact packaging. Actual remote CI status and remaining review are recorded in
 verification.md after the final integration PR is opened. No merges/releases performed.
 Integration source/build pushes additionally trigger the same Windows packaging job;
 this permits pre-merge CI verification while manual dispatch awaits default-branch registration.
+
+Final remote verification: Windows and Ubuntu checks passed in Actions run 39978302172;
+Windows packaging run 39978295834 passed the full build, folder/extracted native smoke
+and artifact uploads. The distributable and smoke reports are available as CI artifacts.
+All app source is committed on codex/integration. See verification.md and review-order.md.
