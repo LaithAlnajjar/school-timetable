@@ -1,4 +1,4 @@
-# Verification record — 23 October 2026
+# Verification record — 24 October 2026
 
 Environment: Windows 11 Home x64, build 22631, CPython 3.12.14, Ryzen 7 5800H
 (16 logical processors), approximately 15.4 GiB RAM. Exact dependency locks are in
@@ -7,7 +7,7 @@ openpyxl 3.1.5, PyInstaller 6.18.0 with hooks 2026.9.
 
 ## Observed local results
 
-- **46 pytest tests passed** (7.00 seconds in the final Windows build).
+- **48 pytest tests passed** (9.95 seconds in the latest Windows build).
 - Ruff lint and formatting checks passed; `pip check` reported no broken requirements.
 - Tests cover exact period/resource assertions, teacher/class/room clashes, availability,
   enabled workload/daily subject caps, doubles, locks/regeneration, invalid and valid
@@ -16,6 +16,8 @@ openpyxl 3.1.5, PyInstaller 6.18.0 with hooks 2026.9.
   preservation, synchronized views, literal/safe XLSX sheet names and PDF pagination.
   Final regressions also cover fractional search-limit persistence and whole-day
   teacher/room restrictions after adding/copying periods, with independent workload assertions.
+  Fresh-interpreter startup tests verify that help imports no GUI/backend libraries,
+  the backends finish loading before Qt, and the real entry point shows its window.
 - Real source entry-point smoke passed on the Windows Qt platform: generation,
   move/locks/undo/redo, locked regeneration, save/reopen, backup/recovery, help,
   class/teacher XLSX/PDF, invalid export rejection, impossible/cancelled search preservation.
@@ -23,8 +25,8 @@ openpyxl 3.1.5, PyInstaller 6.18.0 with hooks 2026.9.
   Both use the native `windows` Qt platform, bundled Python (`frozen: true`), and a
   PATH containing only Windows directories, with Python/Qt development variables removed.
   PE headers confirm Windows x64 and GUI subsystem (no console).
-- Folder smoke: 1.875 seconds, 48 UI heartbeat events. Final corrected ZIP:
-  extracted smoke passed in 1.860 seconds, 46 UI heartbeat events. Outcomes were optimal,
+- Folder smoke: 2.047 seconds, 51 UI heartbeat events. Latest corrected ZIP:
+  extracted smoke passed in 1.812 seconds, 46 UI heartbeat events. Outcomes were optimal,
   optimal with locks, impossible and cancelled. This tests the actual executable.
 - Class and teacher PDFs from the frozen app were reopened, rendered and visually
   inspected. Separate normal/long-name PDF output was rendered using Poppler and
@@ -33,16 +35,32 @@ openpyxl 3.1.5, PyInstaller 6.18.0 with hooks 2026.9.
   feasible in 15.351 seconds with no independent validation issues. A real 0.01-second
   search returned timeout in 0.227 seconds. See performance.md for constraints and limits.
 
-ZIP: `dist/SchoolTimetable-1.0.0-windows-x64.zip`, 94,616,520 bytes.
-SHA256: `faffed2b0c12ea76c742c80139efbf2bdec447966f7e17d4bd7a72cd6c82401a`.
+ZIP: `dist/SchoolTimetable-1.0.0-windows-x64.zip`, 94,616,276 bytes.
+SHA256: `a0efb04bf5a17c9367e972a1ba086ecacb6837614132438ad3ee1c2992d9dcb0`.
 Build/test artifacts and smoke reports are in ignored `build/` and `dist/` folders.
+
+## Startup follow-up
+
+The reported `KeyboardInterrupt` occurred while Qt's feature-import hook inspected
+openpyxl source during startup. Loading the spreadsheet and solver dependency trees
+before Qt reduces observed source-inspection calls from 659 to 49 (dependency calls:
+502 to 4). No Qt hooks or installed dependencies are patched. Argument parsing now
+runs first, so `--help` needs no Qt, spreadsheet or solver imports.
+
+Paired native Windows launches with a warm file cache opened the window in
+2.27–2.70 seconds before and 2.29–2.48 seconds after the change. These overlapping
+times do not establish a warm-cache speedup; the fix removes redundant source I/O
+that can delay startup on cold or slow storage. The source workflow smoke passed
+again (2.235 seconds after startup, 52 heartbeat events), as did the rebuilt folder
+and extracted ZIP. The original entry point fails the new backend-order assertion.
 
 ## Remote review and remaining limits
 
 Final integration branch: `codex/integration`. Review/merge order is documented in
 [review-order.md](review-order.md); all four PRs are open and stacked.
 
-**Observed GitHub Actions results on application source at `d1560d3`:**
+**Earlier observed GitHub Actions results on application source at `d1560d3`
+(before the startup follow-up):**
 
 - [Windows and Ubuntu checks](https://github.com/LaithAlnajjar/school-timetable/actions/runs/39978302172)
   both succeeded, including installation, dependency consistency, Ruff and all 46 tests.

@@ -3,15 +3,9 @@
 import argparse
 import logging
 import sys
+from importlib import import_module
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
-
-from PySide6.QtCore import QStandardPaths
-from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QApplication, QMessageBox
-
-from .storage import ProjectFileError, load_project
-from .ui.window import MainWindow
 
 
 def main():
@@ -24,6 +18,20 @@ def main():
         help="Run the synthetic packaged workflow and write a JSON report",
     )
     args = parser.parse_args()
+
+    # Qt's feature-import hook inspects newly imported modules' source files.
+    # Load the spreadsheet/solver dependency trees first to avoid hundreds of
+    # unnecessary file reads before the window appears, especially on Windows.
+    for backend in ("openpyxl", "ortools.sat.python.cp_model"):
+        import_module(backend)
+
+    from PySide6.QtCore import QStandardPaths
+    from PySide6.QtGui import QFont
+    from PySide6.QtWidgets import QApplication, QMessageBox
+
+    from .storage import ProjectFileError, load_project
+    from .ui.window import MainWindow
+
     app = QApplication(sys.argv[:1])
     app.setOrganizationName("SchoolTimetable")
     app.setApplicationName("School Timetable")

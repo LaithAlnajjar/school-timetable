@@ -70,3 +70,11 @@ Final remote verification: Windows and Ubuntu checks passed in Actions run 39978
 Windows packaging run 39978295834 passed the full build, folder/extracted native smoke
 and artifact uploads. The distributable and smoke reports are available as CI artifacts.
 All app source is committed on codex/integration. See verification.md and review-order.md.
+
+Startup follow-up (24 October): parse command-line arguments before loading desktop
+dependencies, and load openpyxl/OR-Tools before Qt installs its feature-import hook.
+This removes hundreds of redundant source inspections along the reported interrupted
+startup path. Two fresh-interpreter regressions verify lightweight help, initialized
+backends before Qt, and a visible main window. All 48 tests, Ruff and dependency checks
+pass. The source workflow, rebuilt folder EXE and extracted replacement ZIP pass native
+Windows smoke. See verification.md for measurements and the replacement ZIP checksum.
