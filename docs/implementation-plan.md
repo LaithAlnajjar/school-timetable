@@ -6,7 +6,7 @@
    schedule validation, locks, cancellation and representative benchmark.
 3. **Complete — desktop workflow.** Guided Qt setup, responsive generation, shared
    views, atomic manual edits/undo, Excel/Qt PDF exports and user guide.
-4. **Next — Windows delivery.** PyInstaller folder build, reproducible scripts,
+4. **Local delivery complete; CI review pending — Windows delivery.** PyInstaller folder build, reproducible scripts,
    Windows/Linux checks, manual packaging CI, smoke/visual QA and final audit.
 
 The checkout began clean at `7048b84` on `main`; origin's default is `main`.
@@ -47,4 +47,15 @@ recovery locks, rotating logs and built-in plain-English help. Backup files open
 41 tests passed including the Qt workflow, responsive event loop, stale results,
 failure preservation, autosave, current edited exports and both PDF pagination axes.
 Synthetic screenshots in docs/images were visually inspected; row heights account for
-wrapped room/double/lock labels. Packaging, CI and packaged smoke remain next.
+wrapped room/double/lock labels.
+
+Windows delivery: pinned PyInstaller spec and fail-fast Windows build script, isolated
+DLL discovery, x64/no-console verification, official dependency notices, ZIP extraction
+and native GUI smoke with development paths removed. A real frozen-startup failure
+was traced to Poppler's foreign ICU DLL; the spec/PATH isolation now prevents it.
+Final ZIP extracted smoke passed, with actual Qt Windows platform and bundled Python.
+42 local tests, Ruff lint/format, pip consistency, source smoke and folder/ZIP smoke
+passed. PDF pages from the packaged app were rendered and visually inspected.
+CI workflows are configured for PR/main Windows/Linux checks and manual Windows
+artifact packaging. Actual remote CI status and remaining review are recorded in
+verification.md after the final integration PR is opened. No merges/releases performed.

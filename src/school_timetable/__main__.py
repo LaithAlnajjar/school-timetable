@@ -17,6 +17,12 @@ from .ui.window import MainWindow
 def main():
     parser = argparse.ArgumentParser(description="School Timetable — offline weekly planner")
     parser.add_argument("project", nargs="?", help="Optional .schooltimetable file to open")
+    parser.add_argument(
+        "--smoke-test",
+        type=Path,
+        metavar="OUTPUT_FOLDER",
+        help="Run the synthetic packaged workflow and write a JSON report",
+    )
     args = parser.parse_args()
     app = QApplication(sys.argv[:1])
     app.setOrganizationName("SchoolTimetable")
@@ -24,8 +30,12 @@ def main():
     app.setStyle("Fusion")
     app.setPalette(app.style().standardPalette())
     app.setFont(QFont("Segoe UI", 11))
-    app_data = Path(
-        QStandardPaths.writableLocation(QStandardPaths.StandardLocation.AppLocalDataLocation)
+    app_data = (
+        args.smoke_test / "app-data"
+        if args.smoke_test
+        else Path(
+            QStandardPaths.writableLocation(QStandardPaths.StandardLocation.AppLocalDataLocation)
+        )
     )
     app_data.mkdir(parents=True, exist_ok=True)
     handler = RotatingFileHandler(
@@ -48,7 +58,7 @@ def main():
         )
 
     sys.excepthook = report_error
-    window = MainWindow(app_data, check_recovery=not bool(args.project))
+    window = MainWindow(app_data, check_recovery=not bool(args.project or args.smoke_test))
     if args.project:
         try:
             window.replace_project(load_project(args.project), args.project)
@@ -57,6 +67,10 @@ def main():
     geometry = app.primaryScreen().availableGeometry()
     window.resize(min(1280, geometry.width() - 30), min(860, geometry.height() - 40))
     window.show()
+    if args.smoke_test:
+        from .smoke import run_smoke
+
+        run_smoke(app, window, args.smoke_test)
     return app.exec()
 
 

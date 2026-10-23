@@ -693,6 +693,7 @@ class MainWindow(QMainWindow):
         self.elapsed.setText(f"Elapsed: {time.monotonic() - self.started_at:.1f} seconds")
 
     def generation_finished(self, result):
+        self.last_result = result
         accepted = self.session.accept_result(result, self.thread.revision)
         if result.usable and not accepted:
             message = (

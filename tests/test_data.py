@@ -80,3 +80,26 @@ def test_fingerprint_tracks_setup_but_not_schedule():
     assert p.fingerprint() == q.fingerprint()
     q.classes[0].name = "Renamed"
     assert p.fingerprint() != q.fingerprint()
+
+
+def test_failed_atomic_replacement_preserves_project_and_cleans_temp(tmp_path, monkeypatch):
+    from school_timetable import storage
+
+    p = example_school()
+    target = tmp_path / "term.schooltimetable"
+    save_project(p, target)
+    original = target.read_bytes()
+    real_replace = storage.os.replace
+
+    def fail_target(source, destination):
+        if destination == target:
+            raise PermissionError("Simulated locked file")
+        return real_replace(source, destination)
+
+    monkeypatch.setattr(storage.os, "replace", fail_target)
+    p.school_name = "Unsaved new term"
+    with pytest.raises(PermissionError):
+        save_project(p, target)
+    assert target.read_bytes() == original
+    assert target.with_suffix(".schooltimetable.bak").read_bytes() == original
+    assert not list(tmp_path.glob(".term.*"))

@@ -35,3 +35,8 @@ validated moves/swaps; `views` projects the schedule; `exports` writes XLSX and 
 `session` owns document revisions/history; `ui` handles the guided desktop workflow.
 Local recovery files and rotating logs are in Windows LocalAppData under
 `SchoolTimetable/School Timetable`. User projects are saved wherever the user chooses.
+
+Build Windows delivery with `powershell -ExecutionPolicy Bypass -File scripts/build-windows.ps1`.
+The ZIP is `dist/SchoolTimetable-1.0.0-windows-x64.zip`; extract the whole ZIP and open
+SchoolTimetable.exe. See [Windows build details](docs/windows-build.md),
+[actual verification](docs/verification.md), and [observed larger-school timing](docs/performance.md).

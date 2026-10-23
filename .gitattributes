@@ -2,3 +2,5 @@
 *.ps1 text eol=crlf
 *.png binary
 *.ico binary
+# Preserve upstream license text verbatim, including its final blank lines.
+packaging/licenses/*.txt whitespace=-blank-at-eof
