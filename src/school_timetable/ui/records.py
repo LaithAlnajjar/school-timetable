@@ -19,6 +19,7 @@ from ..models import (
     unavailable_slots,
 )
 from .dialogs import RecordDialog, button, label, readonly_table
+from .widgets import fit_setup_table
 
 
 class RecordsPanel(QWidget):
@@ -36,8 +37,10 @@ class RecordsPanel(QWidget):
             label(f"Add your school's {names[collection]}. Double-click a row to edit it.")
         )
         self.table = readonly_table(["Name", "Details"])
+        self.table.setAccessibleName(collection.capitalize())
+        self.table.set_empty(f"No {collection} yet.\nChoose Add below to get started.")
         self.table.setMinimumHeight(180)
-        self.table.cellDoubleClicked.connect(lambda *_: self.edit())
+        self.table.cellActivated.connect(lambda *_: self.edit())
         layout.addWidget(self.table)
         controls = QHBoxLayout()
         singular = {
@@ -47,13 +50,19 @@ class RecordsPanel(QWidget):
             "rooms": "room",
         }[collection]
         button(f"Add {singular}", self.add, controls)
-        button("Edit selected", self.edit, controls)
-        button("Delete selected", self.delete, controls)
+        self.edit_button = button("Edit selected", self.edit, controls)
+        self.delete_button = button("Delete selected", self.delete, controls)
+        self.table.itemSelectionChanged.connect(self.update_actions)
         controls.addStretch()
         layout.addLayout(controls)
         self.empty = label("")
         self.empty.setObjectName("hint")
         layout.addWidget(self.empty)
+
+    def update_actions(self):
+        enabled = self.selected() is not None
+        self.edit_button.setEnabled(enabled)
+        self.delete_button.setEnabled(enabled)
 
     def selected(self):
         row = self.table.currentRow()
@@ -87,9 +96,9 @@ class RecordsPanel(QWidget):
                 item = QTableWidgetItem(text)
                 item.setData(Qt.ItemDataRole.UserRole, record.id)
                 self.table.setItem(row, col, item)
-        self.table.resizeColumnsToContents()
-        self.table.resizeRowsToContents()
+        fit_setup_table(self.table)
         self.empty.setText("No records yet. Use Add above to get started." if not records else "")
+        self.update_actions()
 
     def add(self):
         constructor = {

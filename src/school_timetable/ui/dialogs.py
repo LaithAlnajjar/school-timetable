@@ -9,7 +9,6 @@ from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
     QFormLayout,
-    QHBoxLayout,
     QLabel,
     QLineEdit,
     QListWidget,
@@ -17,7 +16,6 @@ from PySide6.QtWidgets import (
     QPushButton,
     QScrollArea,
     QSpinBox,
-    QTableWidget,
     QTableWidgetItem,
     QTimeEdit,
     QTreeWidget,
@@ -29,6 +27,7 @@ from PySide6.QtWidgets import (
 from ..examples import example_school
 from ..models import Project, Requirement, Slot, new_id
 from ..validation import validate_setup
+from .widgets import ActionFlow, ReadableTable, fit_setup_table
 
 
 def label(text):
@@ -46,11 +45,11 @@ def button(text, callback, layout):
 
 
 def readonly_table(headers):
-    table = QTableWidget(0, len(headers))
+    table = ReadableTable(len(headers))
     table.setHorizontalHeaderLabels(headers)
-    table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
-    table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
-    table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
+    table.setEditTriggers(table.EditTrigger.NoEditTriggers)
+    table.setSelectionBehavior(table.SelectionBehavior.SelectRows)
+    table.setSelectionMode(table.SelectionMode.SingleSelection)
     table.horizontalHeader().setStretchLastSection(True)
     table.verticalHeader().hide()
     table.setWordWrap(True)
@@ -61,51 +60,108 @@ class FormDialog(QDialog):
     def __init__(self, title, parent=None):
         super().__init__(parent)
         self.setWindowTitle(title)
-        self.setMinimumWidth(470)
-        self.resize(560, 480)
+        self.setMinimumWidth(360)
+        self.resize(600, 420)
         self.layout_box = QVBoxLayout(self)
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QScrollArea.Shape.NoFrame)
-        body = QWidget()
-        self.form = QFormLayout(body)
-        self.form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)
-        scroll.setWidget(body)
-        self.layout_box.addWidget(scroll)
+        self.layout_box.setContentsMargins(18, 18, 18, 18)
+        self.layout_box.setSpacing(12)
         self.error = label("")
         self.error.setObjectName("fieldError")
+        self.error.setAccessibleName("Form needs attention")
+        self.error.hide()
+        self.invalid_fields = []
         self.layout_box.addWidget(self.error)
+        self.scroll = QScrollArea()
+        self.scroll.setWidgetResizable(True)
+        self.scroll.setFrameShape(QScrollArea.Shape.NoFrame)
+        body = QWidget()
+        self.form = QFormLayout(body)
+        self.configure_form(self.form)
+        self.scroll.setWidget(body)
+        self.layout_box.addWidget(self.scroll)
         self.buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )
         self.buttons.accepted.connect(self.accept)
         self.buttons.rejected.connect(self.reject)
+        self.buttons.button(QDialogButtonBox.StandardButton.Ok).setText("Save changes")
+        self.buttons.button(QDialogButtonBox.StandardButton.Ok).setObjectName("primary")
         self.layout_box.addWidget(self.buttons)
+
+    @staticmethod
+    def configure_form(form):
+        form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
+        form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapAllRows)
+        form.setVerticalSpacing(10)
+        form.setContentsMargins(2, 2, 8, 8)
+
+    def show_validation(self, text, field=None):
+        self.error.setText("Cannot save yet. " + text)
+        self.error.show()
+        if field is not None:
+            if hasattr(self, "advanced_body") and self.advanced_body.isAncestorOf(field):
+                self.advanced_toggle.setChecked(True)
+            field.setProperty("invalid", True)
+            field.style().unpolish(field)
+            field.style().polish(field)
+            field.setAccessibleDescription(text)
+            if field not in self.invalid_fields:
+                self.invalid_fields.append(field)
+                for name in ("textEdited", "valueChanged", "currentIndexChanged", "timeChanged"):
+                    if hasattr(field, name):
+                        getattr(field, name).connect(self.clear_validation)
+                        break
+            field.setFocus()
+            self.scroll.ensureWidgetVisible(field)
+
+    def clear_validation(self, *_):
+        self.error.hide()
+        for field in self.invalid_fields:
+            field.setProperty("invalid", False)
+            field.setAccessibleDescription("")
+            field.style().unpolish(field)
+            field.style().polish(field)
+
+    def showEvent(self, event):
+        available = self.screen().availableGeometry()
+        self.resize(
+            min(self.width(), available.width() - 40), min(self.height(), available.height() - 60)
+        )
+        super().showEvent(event)
 
     def advanced(self, text="Advanced rules (optional)"):
         toggle = QCheckBox(text)
         body = QWidget()
+        self.advanced_toggle, self.advanced_body = toggle, body
         body.setVisible(False)
         form = QFormLayout(body)
+        self.configure_form(form)
         toggle.toggled.connect(body.setVisible)
+        toggle.toggled.connect(lambda checked: self.expand_advanced() if checked else None)
         self.form.addRow(toggle)
         self.form.addRow(body)
         return form
+
+    def expand_advanced(self):
+        available = self.screen().availableGeometry()
+        self.resize(self.width(), min(760, available.height() - 60))
 
 
 class AvailabilityTree(QTreeWidget):
     def __init__(self, project, unavailable):
         super().__init__()
         self.setHeaderHidden(True)
-        self.setMinimumHeight(160)
-        self.setMaximumHeight(270)
+        self.setMinimumHeight(240)
+        self.setMaximumHeight(320)
+        self.setAccessibleName("Unavailable teaching periods")
+        self.setAccessibleDescription("Checked days and periods are unavailable for teaching.")
         self.slot_items = []
         self.day_items = []
         self.hidden_slots = []
         known = set()
         for day in project.days:
             known.add(day.id)
-            parent = QTreeWidgetItem([day.name + " (select to block the whole day)"])
+            parent = QTreeWidgetItem([day.name + " — all teaching periods"])
             parent.setFlags(
                 parent.flags() | Qt.ItemFlag.ItemIsAutoTristate | Qt.ItemFlag.ItemIsUserCheckable
             )
@@ -162,7 +218,7 @@ def limit_spin(value=None):
 class RecordDialog(FormDialog):
     def __init__(self, project, collection, record, parent=None):
         super().__init__(
-            "Edit "
+            ("Edit " if any(r.id == record.id for r in getattr(project, collection)) else "Add ")
             + {"teachers": "teacher", "classes": "class", "subjects": "subject", "rooms": "room"}[
                 collection
             ],
@@ -180,6 +236,7 @@ class RecordDialog(FormDialog):
             }[collection]
         )
         self.form.addRow("Name", self.name)
+        self.name.setAccessibleName("Name")
         self.year = None
         if collection == "classes":
             self.year = QLineEdit(record.year)
@@ -195,7 +252,9 @@ class RecordDialog(FormDialog):
                 )
             )
             self.availability = AvailabilityTree(project, record.unavailable)
-            advanced.addRow("Unavailable", self.availability)
+            advanced.addRow(
+                "Unavailable days and periods (checked = unavailable)", self.availability
+            )
             if collection == "teachers":
                 self.daily = limit_spin(record.max_daily)
                 self.consecutive = limit_spin(record.max_consecutive)
@@ -207,14 +266,14 @@ class RecordDialog(FormDialog):
     def accept(self):
         name = self.name.text().strip()
         if not name:
-            self.error.setText("Please enter a name.")
+            self.show_validation("Please enter a name.", self.name)
             self.name.setFocus()
             return
         if any(
             r.id != self.record.id and r.name.casefold() == name.casefold()
             for r in getattr(self.project, self.collection)
         ):
-            self.error.setText("That name is already used. Choose a different name.")
+            self.show_validation("That name is already used. Choose a different name.", self.name)
             return
         self.record.name = name
         if self.year is not None:
@@ -250,7 +309,10 @@ class SlotDialog(FormDialog):
 
     def accept(self):
         if not self.name.text().strip() or self.end.time() <= self.start.time():
-            self.error.setText("Enter a period name and an end time later than the start time.")
+            self.show_validation(
+                "Enter a period name and an end time later than the start time.",
+                self.name if not self.name.text().strip() else self.end,
+            )
             return
         self.slot.name = self.name.text().strip()
         self.slot.start, self.slot.end = (
@@ -277,9 +339,9 @@ class DayDialog(FormDialog):
         )
         self.table = readonly_table(["Period", "Start", "End", "Use"])
         self.table.setMinimumHeight(260)
-        self.table.cellDoubleClicked.connect(lambda *_: self.edit_slot())
+        self.table.cellActivated.connect(lambda *_: self.edit_slot())
         self.form.addRow(self.table)
-        row = QHBoxLayout()
+        row = ActionFlow()
         button("Add period", self.add_slot, row)
         button("Edit", self.edit_slot, row)
         button("Delete", self.delete_slot, row)
@@ -300,7 +362,7 @@ class DayDialog(FormDialog):
                 )
             ):
                 self.table.setItem(r, c, QTableWidgetItem(text))
-        self.table.resizeColumnsToContents()
+        fit_setup_table(self.table)
 
     def add_slot(self):
         start = QTime.fromString(self.day.slots[-1].end, "HH:mm") if self.day.slots else QTime(8, 0)
@@ -319,7 +381,7 @@ class DayDialog(FormDialog):
     def edit_slot(self):
         row = self.table.currentRow()
         if row < 0:
-            self.error.setText("Select a period to edit.")
+            self.show_validation("Select a period to edit.")
             return
         dialog = SlotDialog(self.day.slots[row], self)
         if dialog.exec():
@@ -334,7 +396,7 @@ class DayDialog(FormDialog):
 
     def starter(self):
         if self.day.slots:
-            self.error.setText("Delete existing periods first, or add/edit them individually.")
+            self.show_validation("Delete existing periods first, or add/edit them individually.")
             return
         self.day.slots = deepcopy(example_school().days[0].slots)
         for slot in self.day.slots:
@@ -348,17 +410,20 @@ class DayDialog(FormDialog):
             d.id != self.day.id and d.name.casefold() == self.day.name.casefold()
             for d in self.project.days
         ):
-            self.error.setText("That day name is already used.")
+            self.show_validation("That day name is already used.", self.name)
             return
         if issues:
-            self.error.setText("\n".join(i.message for i in issues))
+            self.show_validation("\n".join(i.message for i in issues))
             return
         super().accept()
 
 
 class RequirementDialog(FormDialog):
     def __init__(self, project, requirement=None, parent=None):
-        super().__init__("Lesson requirement", parent)
+        super().__init__(
+            "Edit lesson requirement" if requirement else "Add lesson requirement", parent
+        )
+        self.resize(600, 570)
         self.project = project
         self.requirement = deepcopy(requirement) if requirement else Requirement()
         r = self.requirement
@@ -369,7 +434,8 @@ class RequirementDialog(FormDialog):
             ("teachers", "teacher_id", "Assigned teacher"),
         ):
             combo = QComboBox()
-            combo.setMinimumContentsLength(25)
+            combo.setMinimumContentsLength(12)
+            combo.setAccessibleName(text)
             combo.setSizeAdjustPolicy(
                 QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon
             )
@@ -429,8 +495,8 @@ class RequirementDialog(FormDialog):
         r = deepcopy(self.requirement)
         for key, combo in self.selectors.items():
             if combo.currentData() is None:
-                self.error.setText(
-                    "Add classes, subjects and teachers before entering requirements."
+                self.show_validation(
+                    "Add classes, subjects and teachers before entering requirements.", combo
                 )
                 return
             setattr(r, key, combo.currentData())
@@ -442,15 +508,18 @@ class RequirementDialog(FormDialog):
             if self.rooms.item(i).checkState() == Qt.CheckState.Checked
         ]
         if r.doubles * 2 > r.periods:
-            self.error.setText(
-                "Each double uses two periods. Reduce doubles or increase the weekly total."
+            self.show_validation(
+                "Each double uses two periods. Reduce doubles or increase the weekly total.",
+                self.doubles,
             )
             return
         if any(
             old.id != r.id and (old.class_id, old.subject_id) == (r.class_id, r.subject_id)
             for old in self.project.requirements
         ):
-            self.error.setText("That class and subject already have a row. Edit the existing row.")
+            self.show_validation(
+                "That class and subject already have a row. Edit the existing row."
+            )
             return
         self.requirement = r
         super().accept()

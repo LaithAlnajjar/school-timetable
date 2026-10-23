@@ -1,5 +1,17 @@
 # School Timetable: your first week
 
+The application uses a consistent light appearance, including when Windows uses
+dark mode. Larger Windows text and display scaling are supported; on a smaller
+window, scroll the page to reach the remaining controls. Tables also scroll across
+and down. Drag a timetable column boundary to change its width; lesson text wraps.
+
+Keyboard: Tab and Shift+Tab move between controls. Enter opens the selected setup
+row. Alt+1 through Alt+7 open the workflow steps. In Review and edit, use arrow
+keys to select a lesson, Alt+M to start a move, arrows and Enter to choose the
+destination, and Escape to cancel. Ctrl+Z undoes a timetable edit; Ctrl+Y or
+Ctrl+Shift+Z redoes it. Ctrl+S saves, Ctrl+O opens, Ctrl+N creates a new project,
+F1 opens this guide and Ctrl+Shift+L loads the synthetic example school.
+
 Everything works on your computer without the internet. Your school file belongs to
 you. Save it in Documents or another folder you can find again.
 

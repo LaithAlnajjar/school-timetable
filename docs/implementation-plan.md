@@ -89,3 +89,16 @@ desktop/startup tests pass (16 tests); Ruff and pip consistency pass. Layout,
 keyboard editing, full visual/scaling verification and replacement delivery follow
 on codex/interface-repair, stacked above codex/integration. Baseline captures are
 in build/ui-before; representative evidence is retained in docs/images.
+
+Interface repair, usability checkpoint: full-width, scrollable forms and actionable
+empty states; labeled export choices; wrapping action rows; keyboard-accessible
+setup tables; clear generation progress and errors; and timetable subject hierarchy,
+whole-block selection, destination mode, rejection notices and contextual lock/edit
+controls. Long lessons rewrap when columns change. Every page scrolls at smaller
+sizes; Help and forms fit the available screen. Scheduling, validation, storage,
+file schema and shared export presentation are unchanged. Eleven interface regressions
+cover real palette/rendering contrast, keyboard move/rejection/cancel/undo, lock
+selection, view changes, export gating, compact action reachability, long names,
+inline validation/tab order and Qt accessible names. All 59 tests, Ruff and pip
+consistency pass. Native light/dark appearance captures and Qt 100/125/150/200%
+scale runs found no palette conflict; the final delivery verification follows.

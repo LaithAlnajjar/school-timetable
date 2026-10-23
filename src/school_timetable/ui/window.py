@@ -7,8 +7,8 @@ import time
 from copy import deepcopy
 from pathlib import Path
 
-from PySide6.QtCore import QRect, Qt, QTimer
-from PySide6.QtGui import QAction, QColor, QFontMetrics, QKeySequence
+from PySide6.QtCore import Qt, QTimer
+from PySide6.QtGui import QAction, QColor, QKeySequence
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
     QDialog,
     QDoubleSpinBox,
     QFileDialog,
+    QFormLayout,
     QGroupBox,
     QHBoxLayout,
     QHeaderView,
@@ -24,6 +25,7 @@ from PySide6.QtWidgets import (
     QListWidgetItem,
     QMainWindow,
     QMessageBox,
+    QProgressBar,
     QPushButton,
     QScrollArea,
     QStackedWidget,
@@ -47,7 +49,8 @@ from ..validation import validate_schedule, validate_setup
 from ..views import timetable
 from .dialogs import DayDialog, FormDialog, RequirementDialog, button, label, readonly_table
 from .records import RecordsPanel
-from .theme import apply_theme
+from .theme import apply_theme, status
+from .widgets import CELL_ROLE, ActionFlow, LessonDelegate, WrappedHeader, fit_setup_table
 from .worker import GenerationThread
 
 
@@ -56,7 +59,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         apply_theme(QApplication.instance())
         self.resize(1280, 860)
-        self.setMinimumSize(980, 650)
+        self.setMinimumSize(760, 440)
         self.session = ProjectSession()
         self.recovery = RecoveryStore(app_data)
         self.thread: GenerationThread | None = None
@@ -74,21 +77,22 @@ class MainWindow(QMainWindow):
         side = QVBoxLayout()
         self.navigation = QListWidget()
         self.navigation.setObjectName("navigation")
-        self.navigation.setFixedWidth(225)
+        self.navigation.setFixedWidth(215)
+        self.navigation.setAccessibleName("Workflow steps")
         self.navigation.addItems(
             [
                 "1  School week",
                 "2  Teachers",
-                "3  Classes & subjects",
+                "3  Classes and subjects",
                 "4  Lesson requirements",
                 "5  Generate",
-                "6  Review & edit",
+                "6  Review and edit",
                 "7  Export",
             ]
         )
         side.addWidget(self.navigation)
         self.checklist = label("")
-        self.checklist.setFixedWidth(225)
+        self.checklist.setFixedWidth(215)
         self.checklist.setObjectName("hint")
         side.addWidget(self.checklist)
         outer.addLayout(side)
@@ -134,32 +138,60 @@ class MainWindow(QMainWindow):
             ("Help", self.help, QKeySequence.StandardKey.HelpContents),
         ):
             action = QAction(text, self)
+            action.setToolTip(
+                text + (f" ({QKeySequence(shortcut).toString()})" if shortcut else "")
+            )
             if shortcut:
                 action.setShortcut(QKeySequence(shortcut))
+            elif text == "Load example school":
+                action.setShortcut(QKeySequence("Ctrl+Shift+L"))
             action.triggered.connect(callback)
             toolbar.addAction(action)
+            toolbar.widgetForAction(action).setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        for text, keys, callback in (
+            ("Undo timetable edit", QKeySequence.StandardKey.Undo, self.undo),
+            ("Redo timetable edit", QKeySequence.StandardKey.Redo, self.redo),
+            ("Cancel lesson move", "Escape", self.cancel_move),
+        ):
+            action = QAction(text, self)
+            action.setShortcuts(
+                QKeySequence.keyBindings(keys)
+                if not isinstance(keys, str)
+                else [QKeySequence(keys)]
+            )
+            action.triggered.connect(callback)
+            self.addAction(action)
+        for index in range(7):
+            action = QAction(self)
+            action.setShortcut(QKeySequence(f"Alt+{index + 1}"))
+            action.triggered.connect(lambda _=False, row=index: self.navigation.setCurrentRow(row))
+            self.addAction(action)
 
-    def page(self, title, explanation, *, scroll=False):
+    def page(self, title, explanation):
+        # Every page can scroll at high scaling or on a smaller display. Tables
+        # retain their own two-axis scrolling for larger schools.
+        area = QScrollArea()
+        area.setWidgetResizable(True)
+        area.setFrameShape(QScrollArea.Shape.NoFrame)
+        area.setAccessibleName(title)
         page = QWidget()
         layout = QVBoxLayout(page)
         layout.setContentsMargins(14, 4, 6, 4)
+        layout.setSpacing(12)
         heading = label(title)
         heading.setObjectName("pageTitle")
         layout.addWidget(heading)
         subtitle = label(explanation)
         subtitle.setObjectName("hint")
         layout.addWidget(subtitle)
-        self.pages.addWidget(page)
-        if scroll:
-            area = QScrollArea()
-            area.setWidgetResizable(True)
-            area.setFrameShape(QScrollArea.Shape.NoFrame)
-            body = QWidget()
-            content = QVBoxLayout(body)
-            area.setWidget(body)
-            layout.addWidget(area)
-            return content
+        area.setWidget(page)
+        self.pages.addWidget(area)
         return layout
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        if hasattr(self, "checklist"):
+            self.checklist.setVisible(self.height() >= 700)
 
     def _make_week(self):
         layout = self.page(
@@ -167,17 +199,24 @@ class MainWindow(QMainWindow):
             "Start here. Choose your operating days, teaching periods and breaks.",
         )
         row = QHBoxLayout()
-        row.addWidget(label("School name"))
+        name_label = label("School name")
+        row.addWidget(name_label)
         self.school_name = QLineEdit()
         self.school_name.setMaxLength(180)
         self.school_name.setPlaceholderText("For example, Willow Secondary")
+        self.school_name.setAccessibleName("School name")
+        name_label.setBuddy(self.school_name)
         self.school_name.textEdited.connect(self.school_name_changed)
         row.addWidget(self.school_name, 1)
         layout.addLayout(row)
         self.day_table = readonly_table(["Day", "Teaching periods", "All periods / breaks"])
-        self.day_table.cellDoubleClicked.connect(lambda *_: self.edit_day())
+        self.day_table.setAccessibleName("School days and periods")
+        self.day_table.set_empty(
+            "Your week starts here.\nChoose Add day, or Load example school above."
+        )
+        self.day_table.cellActivated.connect(lambda *_: self.edit_day())
         layout.addWidget(self.day_table)
-        controls = QHBoxLayout()
+        controls = ActionFlow()
         for text, callback in (
             ("Add day", self.add_day),
             ("Edit day", self.edit_day),
@@ -229,14 +268,20 @@ class MainWindow(QMainWindow):
         self.requirements_table = readonly_table(
             ["Class", "Subject", "Assigned teacher", "Periods / week", "Doubles"]
         )
-        self.requirements_table.cellDoubleClicked.connect(lambda *_: self.edit_requirement())
+        self.requirements_table.setAccessibleName("Weekly lesson requirements")
+        self.requirements_table.set_empty(
+            "No lesson requirements yet.\nAdd your classes, subjects and teachers, "
+            "then choose Add lesson requirement."
+        )
+        self.requirements_table.cellActivated.connect(lambda *_: self.edit_requirement())
         layout.addWidget(self.requirements_table)
-        controls = QHBoxLayout()
+        controls = ActionFlow()
         button("Add lesson requirement", self.add_requirement, controls)
         button("Edit selected", self.edit_requirement, controls)
         button("Delete selected", self.delete_requirement, controls)
         layout.addLayout(controls)
         self.loads = QTextBrowser()
+        self.loads.setAccessibleName("Class and teacher teaching loads")
         self.loads.setMaximumHeight(155)
         layout.addWidget(self.loads)
         self.next_button(layout, 4)
@@ -248,7 +293,6 @@ class MainWindow(QMainWindow):
                 "All required lessons must fit. Free periods are allowed. Existing"
                 " locked lessons stay in place."
             ),
-            scroll=True,
         )
         controls = QHBoxLayout()
         self.generate_button = button("Generate timetable", self.generate, controls)
@@ -260,9 +304,19 @@ class MainWindow(QMainWindow):
         controls.addWidget(self.elapsed)
         layout.addLayout(controls)
         self.generation_status = label("Ready when your setup checklist is complete.")
+        self.generation_status.setObjectName("generationStatus")
+        status(self.generation_status, self.generation_status.text())
         layout.addWidget(self.generation_status)
+        self.generation_progress = QProgressBar()
+        self.generation_progress.setRange(0, 0)
+        self.generation_progress.setTextVisible(False)
+        self.generation_progress.setAccessibleName("Generating timetable")
+        self.generation_progress.hide()
+        layout.addWidget(self.generation_progress)
         self.generation_details = QTextBrowser()
-        self.generation_details.setMinimumHeight(200)
+        self.generation_details.setMinimumHeight(160)
+        self.generation_details.setMaximumHeight(240)
+        self.generation_details.setAccessibleName("Setup checks and generation results")
         layout.addWidget(self.generation_details)
         toggle = QCheckBox("Advanced planning settings (optional)")
         layout.addWidget(toggle)
@@ -276,15 +330,13 @@ class MainWindow(QMainWindow):
                 "requirement. Preferences help when possible."
             )
         )
-        row = QHBoxLayout()
-        row.addWidget(label("Search limit in seconds"))
+        row = QFormLayout()
         self.search_limit = QDoubleSpinBox()
         self.search_limit.setRange(0.01, 3600)
         self.search_limit.setDecimals(2)
         self.search_limit.setSingleStep(5)
         self.search_limit.valueChanged.connect(self.settings_changed)
-        row.addWidget(self.search_limit)
-        row.addStretch()
+        row.addRow("Search limit (seconds)", self.search_limit)
         box.addLayout(row)
         box.addWidget(
             label(
@@ -323,28 +375,49 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.schedule_state)
         row = QHBoxLayout()
         self.view_kind = QComboBox()
+        self.view_kind.setAccessibleName("Timetable view")
         self.view_kind.addItems(["Class timetable", "Teacher timetable", "School overview"])
         self.view_kind.currentIndexChanged.connect(self.view_changed)
         self.view_record = QComboBox()
-        self.view_record.currentIndexChanged.connect(self.render_review)
+        self.view_record.setAccessibleName("Class or teacher to review")
+        self.view_record.currentIndexChanged.connect(self.review_record_changed)
         row.addWidget(self.view_kind)
         row.addWidget(self.view_record, 1)
         layout.addLayout(row)
         self.review_table = readonly_table([])
+        self.review_table.setAccessibleName("Editable timetable")
+        self.review_table.setAccessibleDescription(
+            "Use arrow keys to select a lesson, Alt+M to move, Enter to choose a destination, "
+            "Escape to cancel."
+        )
+        self.review_table.set_empty(
+            "No timetable yet.\nComplete your setup, then choose Generate (step 5)."
+        )
+        self.review_table.setMinimumHeight(240)
+        self.review_table.setHorizontalHeader(WrappedHeader(self.review_table))
+        self.review_table.setItemDelegate(LessonDelegate(self))
         self.review_table.setTextElideMode(Qt.TextElideMode.ElideNone)
         self.review_table.setSelectionBehavior(self.review_table.SelectionBehavior.SelectItems)
         self.review_table.cellClicked.connect(self.cell_clicked)
+        self.review_table.cellActivated.connect(self.cell_clicked)
+        self.review_table.currentCellChanged.connect(self.review_selection_changed)
+        self.review_table.horizontalHeader().sectionResized.connect(self.resize_review_rows)
         layout.addWidget(self.review_table, 1)
         self.edit_help = label("Select a lesson to move it or change its lock.")
-        self.edit_help.setObjectName("hint")
+        self.edit_help.setObjectName("editHelp")
         layout.addWidget(self.edit_help)
         row = QHBoxLayout()
-        button("Move / swap selected", self.arm_move, row)
-        button("Cancel move", self.cancel_move, row)
-        button("Lock / unlock selected", self.toggle_lock, row)
+        self.move_button = button("Move / swap lesson", self.arm_move, row)
+        self.move_button.setObjectName("primary")
+        self.move_button.setShortcut(QKeySequence("Alt+M"))
+        self.move_button.setToolTip("Move or swap the selected lesson block (Alt+M)")
+        self.cancel_move_button = button("Cancel move (Esc)", self.cancel_move, row)
+        self.lock_button = button("Lock lesson", self.toggle_lock, row)
+        layout.addLayout(row)
+        row = QHBoxLayout()
         self.undo_button = button("Undo", self.undo, row)
         self.redo_button = button("Redo", self.redo, row)
-        button("Unlock all lessons", self.unlock_all, row)
+        self.unlock_all_button = button("Unlock all lessons", self.unlock_all, row)
         layout.addLayout(row)
         self.schedule_problems = QTextBrowser()
         self.schedule_problems.setMaximumHeight(100)
@@ -359,22 +432,30 @@ class MainWindow(QMainWindow):
             ),
         )
         group = QGroupBox("Choose your export")
-        form = QVBoxLayout(group)
+        form = QFormLayout(group)
+        form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapLongRows)
+        form.setVerticalSpacing(14)
         self.export_kind = QComboBox()
         self.export_kind.addItems(["Class timetables", "Teacher timetables"])
         self.export_kind.currentIndexChanged.connect(self.refresh_export_records)
         self.export_scope = QComboBox()
-        self.export_scope.addItems(["All", "One selected"])
+        self.export_scope.addItems(["All timetables", "One selected timetable"])
         self.export_scope.currentIndexChanged.connect(self.refresh_export_records)
         self.export_record = QComboBox()
         self.export_format = QComboBox()
         self.export_format.addItems(["Excel workbook (.xlsx)", "Printable PDF (.pdf)"])
-        for widget in (self.export_kind, self.export_scope, self.export_record, self.export_format):
-            form.addWidget(widget)
+        for text, widget in (
+            ("Timetables for", self.export_kind),
+            ("Include", self.export_scope),
+            ("Selected class or teacher", self.export_record),
+            ("File type", self.export_format),
+        ):
+            form.addRow(text, widget)
+            widget.setAccessibleName(text)
         self.export_button = QPushButton("Export timetable…")
         self.export_button.setObjectName("primary")
         self.export_button.clicked.connect(self.export_current)
-        form.addWidget(self.export_button)
+        form.addRow(self.export_button)
         layout.addWidget(group)
         layout.addWidget(
             label(
@@ -391,7 +472,16 @@ class MainWindow(QMainWindow):
     def next_button(self, layout, index):
         row = QHBoxLayout()
         row.addStretch()
-        widget = button("Next step →", lambda: self.navigation.setCurrentRow(index), row)
+        names = (
+            "School week",
+            "Teachers",
+            "Classes and subjects",
+            "Lesson requirements",
+            "Generate",
+        )
+        widget = button(
+            f"Next: {names[index]} →", lambda: self.navigation.setCurrentRow(index), row
+        )
         widget.setObjectName("primary")
         layout.addLayout(row)
 
@@ -424,7 +514,7 @@ class MainWindow(QMainWindow):
                 (day.name, str(sum(s.teaching for s in day.slots)), str(len(day.slots)))
             ):
                 self.day_table.setItem(row, col, QTableWidgetItem(text))
-        self.day_table.resizeColumnsToContents()
+        fit_setup_table(self.day_table)
         for panel in self.record_panels:
             panel.refresh()
         self.requirements_table.setRowCount(len(self.project.requirements))
@@ -439,8 +529,7 @@ class MainWindow(QMainWindow):
                 names.append(record.name if record else "Missing - edit this row")
             for col, text in enumerate([*names, str(r.periods), str(r.doubles)]):
                 self.requirements_table.setItem(row, col, QTableWidgetItem(text))
-        self.requirements_table.resizeColumnsToContents()
-        self.requirements_table.resizeRowsToContents()
+        fit_setup_table(self.requirements_table)
         loads = ["Class totals (unused periods remain free):"]
         capacity = len(teaching_slots(self.project))
         for group in self.project.classes:
@@ -471,14 +560,14 @@ class MainWindow(QMainWindow):
             ("Classes & subjects", ("classes", "subjects")),
             ("Lesson requirements", ("requirements",)),
         ]
-        checklist = ["SETUP CHECKLIST"]
+        checklist = ["SETUP PROGRESS"]
         for name, paths in groups:
             bad = any(
                 any(i.path == path or i.path.startswith(path + ".") for path in paths)
                 for i in setup
             )
-            checklist.append(("○  " if bad else "✓  ") + name)
-        self.checklist.setText("\n\n".join(checklist))
+            checklist.append(("To do: " if bad else "Done: ") + name)
+        self.checklist.setText("\n".join(checklist))
         path = self.session.path.name if self.session.path else "New project"
         self.setWindowTitle(f"{'* ' if self.session.dirty else ''}School Timetable — {path}")
         self.statusBar().showMessage(
@@ -516,13 +605,35 @@ class MainWindow(QMainWindow):
             )
         else:
             state = "Valid timetable • All mandatory rules checked • Ready to export"
-        self.schedule_state.setText(state)
+        status(
+            self.schedule_state,
+            state,
+            "error"
+            if self.project.lessons and schedule_issues
+            else "success"
+            if self.project.lessons
+            else "info",
+        )
+        self.export_button.setEnabled(bool(self.project.lessons) and not schedule_issues)
+        if not self.project.lessons:
+            status(self.export_status, "Generate a timetable in step 5 before exporting.")
+        elif schedule_issues:
+            status(
+                self.export_status,
+                "Export is unavailable. Review the timetable problems in step 6.",
+                "error",
+            )
+        elif self.export_status.text().startswith(
+            ("Generate a timetable", "Export is unavailable.")
+        ):
+            status(self.export_status, "")
         self.schedule_problems.setVisible(bool(schedule_issues and self.project.lessons))
         self.schedule_problems.setPlainText(
             "\n".join(dict.fromkeys(i.message for i in schedule_issues))
         )
         self.undo_button.setEnabled(bool(self.session.history.undo_stack))
         self.redo_button.setEnabled(bool(self.session.history.redo_stack))
+        self.update_edit_controls()
 
     def add_day(self):
         self.day_dialog(Day(name=f"Day {len(self.project.days) + 1}"))
@@ -573,6 +684,7 @@ class MainWindow(QMainWindow):
             return
         source = self.project.days[row]
         dialog = FormDialog("Copy daily pattern", self)
+        dialog.buttons.button(dialog.buttons.StandardButton.Ok).setText("Copy pattern")
         dialog.form.addRow(
             label(
                 "Select the days to replace. Existing locks and unavailable-period"
@@ -647,12 +759,15 @@ class MainWindow(QMainWindow):
         if self.thread is not None:
             return
         self.thread = GenerationThread(self.project, self.session.revision, self)
-        self.thread.status.connect(self.generation_status.setText)
+        self.thread.status.connect(lambda text: status(self.generation_status, text))
         self.thread.completed.connect(self.generation_finished)
         self.thread.finished.connect(self.worker_finished)
         self.generate_button.setEnabled(False)
         self.cancel_button.setEnabled(True)
+        self.generation_progress.show()
+        status(self.generation_status, "Generating timetable… Your previous timetable is safe.")
         self.generation_details.clear()
+        self.pages.widget(4).verticalScrollBar().setValue(0)
         self.started_at = time.monotonic()
         self.elapsed_timer.start()
         self.thread.start()
@@ -661,8 +776,9 @@ class MainWindow(QMainWindow):
         if self.thread:
             self.thread.cancel()
             self.cancel_button.setEnabled(False)
-            self.generation_status.setText(
-                "Cancelling generation… Your previous timetable will be kept."
+            status(
+                self.generation_status,
+                "Cancelling generation… Your previous timetable will be kept.",
             )
 
     def update_elapsed(self):
@@ -683,11 +799,16 @@ class MainWindow(QMainWindow):
             self.debounce.start()
             self.refresh()
             self.navigation.setCurrentRow(5)
-        self.generation_status.setText(message)
+        status(
+            self.generation_status,
+            message,
+            "success" if accepted else "info" if "cancelled" in message.lower() else "error",
+        )
         self.generation_details.setPlainText(
             message + "\n\n" + "\n".join(dict.fromkeys(i.message for i in result.issues))
         )
         self.elapsed.setText(f"Finished in {result.elapsed:.2f} seconds")
+        self.pages.widget(4).verticalScrollBar().setValue(0)
 
     def worker_finished(self):
         self.elapsed_timer.stop()
@@ -695,6 +816,7 @@ class MainWindow(QMainWindow):
         self.thread = None
         self.generate_button.setEnabled(True)
         self.cancel_button.setEnabled(False)
+        self.generation_progress.hide()
         worker.deleteLater()
         if self.close_when_finished:
             QTimer.singleShot(0, self.close)
@@ -713,11 +835,23 @@ class MainWindow(QMainWindow):
             self.view_record.setCurrentIndex(index)
         self.view_record.setVisible(self.view_kind.currentIndex() != 2)
         self.view_record.blockSignals(False)
+        self.pending_lesson = self.selected_lesson = None
+        status(self.edit_help, "Select a lesson to move it or change its lock.")
         self.render_review()
+
+    def review_record_changed(self, *_):
+        self.pending_lesson = self.selected_lesson = None
+        status(self.edit_help, "Select a lesson to move it or change its lock.")
+        self.render_review()
+
+    def review_selection_changed(self, row, col, *_):
+        if not self.pending_lesson and not getattr(self, "rendering_review", False):
+            self.cell_clicked(row, col)
 
     def render_review(self, *_):
         if self.rendering:
             return
+        self.rendering_review = True
         self.cell_map.clear()
         self.review_table.clear()
         overview = self.view_kind.currentIndex() == 2
@@ -746,6 +880,8 @@ class MainWindow(QMainWindow):
             if record_id is None:
                 self.review_table.setRowCount(0)
                 self.review_table.setColumnCount(0)
+                self.rendering_review = False
+                self.update_edit_controls()
                 return
             table = timetable(self.project, kind, record_id)
             self.review_table.setColumnCount(len(table.days))
@@ -761,27 +897,26 @@ class MainWindow(QMainWindow):
         columns = self.review_table.columnCount()
         for col in range(columns):
             self.review_table.setColumnWidth(
-                col, max(190, self.review_table.viewport().width() // max(1, columns))
+                col, max(190, (self.review_table.viewport().width() - 20) // max(1, columns))
             )
+            item = self.review_table.horizontalHeaderItem(col)
+            if item:
+                item.setToolTip(item.text())
+        self.rendering_review = False
+        self.resize_review_rows()
+        self.update_edit_controls()
+
+    def resize_review_rows(self, *_):
+        if getattr(self, "rendering_review", False):
+            return
         self.review_table.resizeRowsToContents()
-        metrics = QFontMetrics(self.review_table.font())
-        for row in range(self.review_table.rowCount()):
-            needed = 80
-            for col in range(columns):
-                item = self.review_table.item(row, col)
-                if item:
-                    bounds = QRect(0, 0, max(40, self.review_table.columnWidth(col) - 28), 10000)
-                    needed = max(
-                        needed,
-                        metrics.boundingRect(bounds, Qt.TextFlag.TextWordWrap, item.text()).height()
-                        + 32,
-                    )
-            self.review_table.setRowHeight(row, max(needed, self.review_table.rowHeight(row)))
 
     def set_cell(self, row, col, cell, *, heading=True):
         text = (cell.heading + "\n" if heading else "") + cell.text
         item = QTableWidgetItem(text)
+        item.setData(CELL_ROLE, cell)
         item.setToolTip(text)
+        item.setData(Qt.ItemDataRole.AccessibleTextRole, text)
         item.setBackground(QColor(cell.color))
         item.setForeground(QColor("#173650"))
         item.setTextAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
@@ -794,8 +929,11 @@ class MainWindow(QMainWindow):
             return
         if self.pending_lesson:
             if not cell.teaching:
-                self.edit_help.setText(
-                    "Choose a teaching period. Breaks and blocked periods cannot hold lessons."
+                status(
+                    self.edit_help,
+                    "Move rejected. Breaks and blocked periods cannot hold lessons. "
+                    "Choose another teaching period, or press Esc to cancel.",
+                    "error",
                 )
                 return
             try:
@@ -803,38 +941,69 @@ class MainWindow(QMainWindow):
                     self.project, self.pending_lesson, cell.slot_id, cell.lesson_id
                 )
             except EditError as exc:
-                self.edit_help.setText(str(exc))
+                status(
+                    self.edit_help,
+                    "Move rejected. "
+                    + str(exc)
+                    + " Choose another period, or press Esc to cancel.",
+                    "error",
+                )
                 return
             self.session.history.apply(self.project, candidate)
             self.pending_lesson = None
             self.schedule_changed("Lesson block moved. All mandatory rules checked.")
         else:
             self.selected_lesson = cell.lesson_id
-            self.edit_help.setText(
-                cell.text
+            status(
+                self.edit_help,
+                "Selected lesson: " + cell.text.replace("\n", " • ")
                 if cell.lesson_id
-                else "This is a free period or break. Select a lesson first."
+                else "This is a free period or break. Select a lesson first.",
             )
+            self.update_edit_controls()
+
+    def update_edit_controls(self):
+        lesson = next(
+            (lesson for lesson in self.project.lessons if lesson.id == self.selected_lesson), None
+        )
+        moving = bool(self.pending_lesson)
+        self.move_button.setEnabled(bool(lesson and not lesson.locked and not moving))
+        self.cancel_move_button.setEnabled(moving)
+        self.lock_button.setEnabled(bool(lesson) and not moving)
+        self.lock_button.setText("Unlock lesson" if lesson and lesson.locked else "Lock lesson")
+        self.unlock_all_button.setEnabled(any(lesson.locked for lesson in self.project.lessons))
+        self.review_table.viewport().setCursor(
+            Qt.CursorShape.CrossCursor if moving else Qt.CursorShape.ArrowCursor
+        )
+        self.review_table.viewport().update()
 
     def arm_move(self):
         lesson = next(
             (lesson for lesson in self.project.lessons if lesson.id == self.selected_lesson), None
         )
         if not lesson:
-            self.edit_help.setText("Select a lesson in the timetable first.")
+            status(self.edit_help, "Select a lesson in the timetable first.")
         elif lesson.locked:
-            self.edit_help.setText("Unlock this lesson block before moving it.")
+            status(self.edit_help, "Unlock this lesson block before moving it.")
         else:
             self.pending_lesson = lesson.id
-            self.edit_help.setText(
-                "Now click a destination teaching period. An occupied destination "
-                "attempts a complete swap. Invalid moves leave the timetable "
-                "unchanged."
+            status(
+                self.edit_help,
+                "Moving selected lesson — choose a destination. Click a teaching period, "
+                "or use arrow keys and Enter. An occupied period attempts a swap. "
+                "Every move is checked. Press Esc to cancel.",
+                "moving",
             )
+            self.review_table.setFocus()
+            self.update_edit_controls()
 
     def cancel_move(self):
         self.pending_lesson = None
-        self.edit_help.setText("Move cancelled. Select a lesson to begin another edit.")
+        status(
+            self.edit_help,
+            "Move cancelled. Your timetable is unchanged. Select a lesson to continue.",
+        )
+        self.update_edit_controls()
 
     def toggle_lock(self):
         candidate = deepcopy(self.project.lessons)
@@ -848,6 +1017,8 @@ class MainWindow(QMainWindow):
         self.schedule_changed(
             "Lesson block locked in place." if lesson.locked else "Lesson block unlocked."
         )
+        self.selected_lesson = lesson.id
+        self.update_edit_controls()
 
     def unlock_all(self):
         if not any(lesson.locked for lesson in self.project.lessons):
@@ -878,7 +1049,7 @@ class MainWindow(QMainWindow):
         self.debounce.start()
         self.render_review()
         self.refresh_status()
-        self.edit_help.setText(message)
+        status(self.edit_help, message, "success")
 
     def refresh_export_records(self, *_):
         if self.rendering:
@@ -896,9 +1067,11 @@ class MainWindow(QMainWindow):
     def export_current(self):
         issues = validate_schedule(self.project)
         if issues:
-            self.export_status.setText(
+            status(
+                self.export_status,
                 "Correct these timetable problems first:\n"
-                + "\n".join(dict.fromkeys(i.message for i in issues))
+                + "\n".join(dict.fromkeys(i.message for i in issues)),
+                "error",
             )
             return
         kind = "classes" if self.export_kind.currentIndex() == 0 else "teachers"
@@ -918,9 +1091,11 @@ class MainWindow(QMainWindow):
             target = Path(str(target) + suffix)
         try:
             (export_pdf if pdf else export_excel)(self.project, target, kind, ids)
-            self.export_status.setText(
+            status(
+                self.export_status,
                 f"Export complete: {target}\nYour current edits are included. "
-                "Save the project too if you want to edit it later."
+                "Save the project too if you want to edit it later.",
+                "success",
             )
         except (OSError, ValueError, ExportError) as exc:
             self.show_error("Cannot export timetable", str(exc))
@@ -957,8 +1132,8 @@ class MainWindow(QMainWindow):
         self.session.replace(project, path, dirty=dirty)
         self.recovery.clear()
         self.pending_lesson = self.selected_lesson = None
-        self.generation_status.setText("Ready to generate when your setup is complete.")
-        self.export_status.clear()
+        status(self.generation_status, "Ready to generate when your setup is complete.")
+        status(self.export_status, "")
         self.refresh()
         self.navigation.setCurrentRow(0)
         if dirty:
@@ -1086,7 +1261,8 @@ class MainWindow(QMainWindow):
 
         dialog = QDialog(self)
         dialog.setWindowTitle("School Timetable — Help")
-        dialog.resize(760, 650)
+        available = self.screen().availableGeometry()
+        dialog.resize(min(760, available.width() - 40), min(650, available.height() - 60))
         layout = QVBoxLayout(dialog)
         text = QTextBrowser()
         text.setMarkdown(

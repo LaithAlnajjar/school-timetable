@@ -83,7 +83,7 @@ QListWidget#navigation:focus { border: 2px solid #1458A8; }
 QLabel#pageTitle { font-size: 21pt; font-weight: 600; color: #19374F; }
 QLabel#hint { color: #4B5E71; }
 QLabel#fieldError { color: #A12B24; padding: 6px; }
-QLabel[tone="info"], QLabel#scheduleState, QLabel#editHelp, QLabel#generationStatus {
+QLabel[notice="true"] {
     background: #E6EEF6; color: #20344D; border: 1px solid #718096;
     border-radius: 4px; padding: 9px;
 }
@@ -141,12 +141,17 @@ QSpinBox::up-arrow, QDoubleSpinBox::up-arrow, QTimeEdit::up-arrow {
 QSpinBox::down-arrow, QDoubleSpinBox::down-arrow, QTimeEdit::down-arrow {
     image: url("DOWN"); width: 12px; height: 12px;
 }
-QCheckBox::indicator {
+QCheckBox::indicator, QTreeView::indicator, QListView::indicator {
+    width: 20px; height: 20px;
     background: white; border: 1px solid #718096; border-radius: 3px;
 }
-QCheckBox::indicator:checked { background: #205C86; image: url("CHECK"); }
-QCheckBox::indicator:indeterminate { background: #205C86; image: url("PARTIAL"); }
-QCheckBox::indicator:disabled { background: #E9EDF2; }
+QCheckBox::indicator:checked, QTreeView::indicator:checked, QListView::indicator:checked {
+    background: #205C86; image: url("CHECK");
+}
+QCheckBox::indicator:indeterminate, QTreeView::indicator:indeterminate,
+QListView::indicator:indeterminate { background: #205C86; image: url("PARTIAL"); }
+QCheckBox::indicator:disabled, QTreeView::indicator:disabled,
+QListView::indicator:disabled { background: #E9EDF2; }
 """
 
 
@@ -209,7 +214,9 @@ def apply_theme(app: QApplication):
 def status(widget, text, tone="info"):
     """A visible message always explains the state in words as well as color."""
     widget.setText(text)
+    widget.setVisible(bool(text))
     widget.setAccessibleDescription(text)
+    widget.setProperty("notice", True)
     widget.setProperty("tone", tone)
     widget.style().unpolish(widget)
     widget.style().polish(widget)

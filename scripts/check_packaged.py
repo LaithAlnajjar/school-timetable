@@ -25,6 +25,10 @@ def main():
     assert not (exe.parent / "_internal" / "icuuc.dll").exists(), (
         "A foreign ICU DLL shadows Windows ICU"
     )
+    for name in ("up", "down", "check", "partial"):
+        assert (
+            exe.parent / "_internal" / "school_timetable" / "resources" / f"{name}.svg"
+        ).is_file()
     env = dict(os.environ)
     for key in list(env):
         if key.startswith(("PYTHON", "QT_")) or key == "VIRTUAL_ENV":
