@@ -287,6 +287,7 @@ def test_expanding_advanced_dialog_keeps_save_and_cancel_on_screen(qapp):
 
 def test_status_transitions_reserve_text_padding_after_polish(qapp):
     from PySide6.QtWidgets import QLabel
+
     from school_timetable.ui.theme import status
 
     label = QLabel()
