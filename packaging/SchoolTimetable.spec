@@ -5,7 +5,7 @@ from PyInstaller.utils.hooks import collect_all, collect_data_files
 
 root = Path(SPECPATH).parent
 ortools_data, ortools_binaries, ortools_hidden = collect_all("ortools")
-data = collect_data_files("school_timetable", includes=["resources/*.md"])
+data = collect_data_files("school_timetable", includes=["resources/*.md", "resources/*.svg"])
 
 a = Analysis(
     [str(root / "scripts" / "launch.py")],

@@ -26,18 +26,16 @@ def main():
         import_module(backend)
 
     from PySide6.QtCore import QStandardPaths
-    from PySide6.QtGui import QFont
     from PySide6.QtWidgets import QApplication, QMessageBox
 
     from .storage import ProjectFileError, load_project
+    from .ui.theme import apply_theme
     from .ui.window import MainWindow
 
     app = QApplication(sys.argv[:1])
     app.setOrganizationName("SchoolTimetable")
     app.setApplicationName("School Timetable")
-    app.setStyle("Fusion")
-    app.setPalette(app.style().standardPalette())
-    app.setFont(QFont("Segoe UI", 11))
+    apply_theme(app)
     app_data = (
         args.smoke_test / "app-data"
         if args.smoke_test

@@ -16,7 +16,7 @@ school-timetable = "school_timetable.__main__:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-school_timetable = ["resources/*.md"]
+school_timetable = ["resources/*.md", "resources/*.svg"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

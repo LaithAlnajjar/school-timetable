@@ -10,6 +10,7 @@ from pathlib import Path
 from PySide6.QtCore import QRect, Qt, QTimer
 from PySide6.QtGui import QAction, QColor, QFontMetrics, QKeySequence
 from PySide6.QtWidgets import (
+    QApplication,
     QCheckBox,
     QComboBox,
     QDialog,
@@ -46,42 +47,14 @@ from ..validation import validate_schedule, validate_setup
 from ..views import timetable
 from .dialogs import DayDialog, FormDialog, RequirementDialog, button, label, readonly_table
 from .records import RecordsPanel
+from .theme import apply_theme
 from .worker import GenerationThread
-
-STYLE = """
-QMainWindow, QDialog { background: #F5F7FB; }
-QWidget { font-family: 'Segoe UI', Arial; font-size: 11pt; color: #20344D; }
-QPushButton { background: white; border: 1px solid #CBD5E1; border-radius: 5px;
-              padding: 7px 13px; min-height: 22px; }
-QPushButton:hover { background: #EAF0F8; border-color: #6F91B5; }
-QPushButton:disabled { color: #8D98A6; background: #F1F3F6; }
-QPushButton#primary { background: #245C8A; color: white; border: none; font-weight: 600; }
-QPushButton#primary:hover { background: #19466B; }
-QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox, QTimeEdit {
-background: white; border: 1px solid #C5CFDC;
-                                       border-radius: 4px; padding: 5px; min-height: 23px; }
-QTableWidget, QTreeWidget, QTextBrowser { background: white; border: 1px solid #D8E0EA;
-                            gridline-color: #DCE3EC; selection-background-color: #CBDFF3; }
-QTableWidget::item { padding: 7px; }
-QHeaderView::section { background: #E8EEF6; border: 0; padding: 9px; font-weight: 600; }
-QListWidget#navigation { background: #173650; color: white; border: none; border-radius: 6px; }
-QListWidget#navigation::item { padding: 16px 10px; color: white; }
-QListWidget#navigation::item:selected { background: #2B5C83; border-left: 4px solid #8CCBE8; }
-QLabel#pageTitle { font-size: 22pt; font-weight: 600; color: #173650; }
-QLabel#hint { color: #5F7187; }
-QLabel#fieldError { color: #9B302A; }
-QLabel#scheduleState { background: #E8EEF6; padding: 10px; border-radius: 5px; }
-QToolBar { background: white; border-bottom: 1px solid #D8E0EA; padding: 6px; spacing: 10px; }
-QGroupBox { font-weight: 600; border: 1px solid #D3DCE8; border-radius: 5px;
-            margin-top: 15px; padding-top: 20px; }
-QGroupBox::title { subcontrol-origin: margin; left: 12px; padding: 0 5px; }
-"""
 
 
 class MainWindow(QMainWindow):
     def __init__(self, app_data: Path, *, check_recovery=True):
         super().__init__()
-        self.setStyleSheet(STYLE)
+        apply_theme(QApplication.instance())
         self.resize(1280, 860)
         self.setMinimumSize(980, 650)
         self.session = ProjectSession()

@@ -78,3 +78,14 @@ startup path. Two fresh-interpreter regressions verify lightweight help, initial
 backends before Qt, and a visible main window. All 48 tests, Ruff and dependency checks
 pass. The source workflow, rebuilt folder EXE and extracted replacement ZIP pass native
 Windows smoke. See verification.md for measurements and the replacement ZIP checksum.
+
+Interface repair (24 October), first checkpoint: native Windows captures of every
+workflow, dialogs, availability, errors, help, selections and generation states
+confirmed dark Windows palette leakage into light-styled forms and unreadable
+selected lessons. A centralized light palette now defines active, inactive and
+disabled roles, readable selections/placeholders, boundaries, focus, tooltips and
+control symbols. Five focused contrast/rendering regressions and the existing
+desktop/startup tests pass (16 tests); Ruff and pip consistency pass. Layout,
+keyboard editing, full visual/scaling verification and replacement delivery follow
+on codex/interface-repair, stacked above codex/integration. Baseline captures are
+in build/ui-before; representative evidence is retained in docs/images.
