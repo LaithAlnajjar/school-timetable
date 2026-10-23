@@ -2,7 +2,7 @@
 
 from copy import deepcopy
 
-from PySide6.QtCore import Qt, QTime
+from PySide6.QtCore import Qt, QTime, QTimer
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -128,6 +128,7 @@ class FormDialog(QDialog):
             min(self.width(), available.width() - 40), min(self.height(), available.height() - 60)
         )
         super().showEvent(event)
+        QTimer.singleShot(0, self.fit_screen)
 
     def advanced(self, text="Advanced rules (optional)"):
         toggle = QCheckBox(text)
@@ -145,6 +146,16 @@ class FormDialog(QDialog):
     def expand_advanced(self):
         available = self.screen().availableGeometry()
         self.resize(self.width(), min(760, available.height() - 60))
+        QTimer.singleShot(0, self.fit_screen)
+
+    def fit_screen(self):
+        # Expanding an already centered dialog can otherwise place Save/Cancel
+        # below the desktop, even though its height fits the screen.
+        available = self.screen().availableGeometry()
+        frame = self.frameGeometry()
+        left = max(available.left(), min(frame.left(), available.right() - frame.width() + 1))
+        top = max(available.top(), min(frame.top(), available.bottom() - frame.height() + 1))
+        self.move(self.x() + left - frame.left(), self.y() + top - frame.top())
 
 
 class AvailabilityTree(QTreeWidget):

@@ -268,3 +268,18 @@ def test_form_controls_expose_label_names_to_accessibility(qapp):
                 interface = QAccessible.queryAccessibleInterface(field.widget())
                 assert interface.text(QAccessible.Text.Name), label_item.widget().text()
         form.reject()
+
+
+def test_expanding_advanced_dialog_keeps_save_and_cancel_on_screen(qapp):
+    from school_timetable.examples import example_school
+
+    dialog = RecordDialog(example_school(), "teachers", Teacher())
+    dialog.show()
+    QTest.qWait(20)
+    available = dialog.screen().availableGeometry()
+    dialog.move(available.left() + 30, available.bottom() - dialog.height() - 10)
+    dialog.advanced_toggle.setChecked(True)
+    QTest.qWait(30)
+    assert available.contains(dialog.frameGeometry())
+    assert dialog.buttons.isVisible()
+    dialog.reject()

@@ -102,3 +102,8 @@ selection, view changes, export gating, compact action reachability, long names,
 inline validation/tab order and Qt accessible names. All 59 tests, Ruff and pip
 consistency pass. Native light/dark appearance captures and Qt 100/125/150/200%
 scale runs found no palette conflict; the final delivery verification follows.
+
+Native window-boundary checks then caught advanced forms expanding below the
+desktop at 100–150%. Expansion now repositions the entire frame into the available
+screen, preserving visible Save/Cancel. A twelfth interface regression covers this;
+all 12 interface checks and the native 100% capture pass with no out-of-bounds windows.
