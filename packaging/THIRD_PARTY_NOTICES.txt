@@ -1,0 +1,18 @@
+School Timetable uses open-source libraries. Their copyright notices and license
+texts are included in LICENSES; the dependency inventory records installed versions.
+
+Python: Python Software Foundation License.
+PySide6 / Qt / Shiboken: LGPL v3, GPL options and applicable third-party component
+licenses. This folder distribution dynamically loads Qt libraries; retain notices
+and supporting libraries. Qt source is available at https://code.qt.io/ and
+https://download.qt.io/archive/qt/6.10/6.10.2/ . PySide source is available at
+https://code.qt.io/cgit/pyside/pyside-setup.git/ (v6.10.2).
+You may replace the dynamically loaded Qt/PySide libraries with compatible modified
+builds and reverse-engineer this application as necessary to debug those modifications.
+Qt's LGPL/GPL license texts are included alongside the wheel-supplied notices.
+OR-Tools: Apache License 2.0. Bundled native solver dependencies carry their own notices.
+openpyxl: MIT License. NumPy: BSD. pandas: BSD. See the bundled license texts.
+PyInstaller: GPL with the bootloader exception permitting bundled application distribution.
+
+The application accesses local project files only. No telemetry or external service
+is used. Third-party copyright holders do not endorse this application.

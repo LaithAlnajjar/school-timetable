@@ -1,0 +1,582 @@
+{
+  "format": "school-timetable",
+  "version": 1,
+  "project": {
+    "school_name": "Willow Secondary — Example",
+    "days": [
+      {
+        "id": "day0",
+        "name": "Sunday",
+        "slots": [
+          {
+            "id": "d0s0",
+            "name": "Period 1",
+            "start": "08:00",
+            "end": "08:45",
+            "teaching": true
+          },
+          {
+            "id": "d0s1",
+            "name": "Period 2",
+            "start": "08:45",
+            "end": "09:30",
+            "teaching": true
+          },
+          {
+            "id": "d0s2",
+            "name": "Break",
+            "start": "09:30",
+            "end": "09:50",
+            "teaching": false
+          },
+          {
+            "id": "d0s3",
+            "name": "Period 3",
+            "start": "09:50",
+            "end": "10:35",
+            "teaching": true
+          },
+          {
+            "id": "d0s4",
+            "name": "Period 4",
+            "start": "10:35",
+            "end": "11:20",
+            "teaching": true
+          },
+          {
+            "id": "d0s5",
+            "name": "Period 5",
+            "start": "11:20",
+            "end": "12:05",
+            "teaching": true
+          },
+          {
+            "id": "d0s6",
+            "name": "Lunch",
+            "start": "12:05",
+            "end": "12:45",
+            "teaching": false
+          },
+          {
+            "id": "d0s7",
+            "name": "Period 6",
+            "start": "12:45",
+            "end": "13:30",
+            "teaching": true
+          }
+        ]
+      },
+      {
+        "id": "day1",
+        "name": "Monday",
+        "slots": [
+          {
+            "id": "d1s0",
+            "name": "Period 1",
+            "start": "08:00",
+            "end": "08:45",
+            "teaching": true
+          },
+          {
+            "id": "d1s1",
+            "name": "Period 2",
+            "start": "08:45",
+            "end": "09:30",
+            "teaching": true
+          },
+          {
+            "id": "d1s2",
+            "name": "Break",
+            "start": "09:30",
+            "end": "09:50",
+            "teaching": false
+          },
+          {
+            "id": "d1s3",
+            "name": "Period 3",
+            "start": "09:50",
+            "end": "10:35",
+            "teaching": true
+          },
+          {
+            "id": "d1s4",
+            "name": "Period 4",
+            "start": "10:35",
+            "end": "11:20",
+            "teaching": true
+          },
+          {
+            "id": "d1s5",
+            "name": "Period 5",
+            "start": "11:20",
+            "end": "12:05",
+            "teaching": true
+          },
+          {
+            "id": "d1s6",
+            "name": "Lunch",
+            "start": "12:05",
+            "end": "12:45",
+            "teaching": false
+          },
+          {
+            "id": "d1s7",
+            "name": "Period 6",
+            "start": "12:45",
+            "end": "13:30",
+            "teaching": true
+          }
+        ]
+      },
+      {
+        "id": "day2",
+        "name": "Tuesday",
+        "slots": [
+          {
+            "id": "d2s0",
+            "name": "Period 1",
+            "start": "08:00",
+            "end": "08:45",
+            "teaching": true
+          },
+          {
+            "id": "d2s1",
+            "name": "Period 2",
+            "start": "08:45",
+            "end": "09:30",
+            "teaching": true
+          },
+          {
+            "id": "d2s2",
+            "name": "Break",
+            "start": "09:30",
+            "end": "09:50",
+            "teaching": false
+          },
+          {
+            "id": "d2s3",
+            "name": "Period 3",
+            "start": "09:50",
+            "end": "10:35",
+            "teaching": true
+          },
+          {
+            "id": "d2s4",
+            "name": "Period 4",
+            "start": "10:35",
+            "end": "11:20",
+            "teaching": true
+          },
+          {
+            "id": "d2s5",
+            "name": "Period 5",
+            "start": "11:20",
+            "end": "12:05",
+            "teaching": true
+          },
+          {
+            "id": "d2s6",
+            "name": "Lunch",
+            "start": "12:05",
+            "end": "12:45",
+            "teaching": false
+          },
+          {
+            "id": "d2s7",
+            "name": "Period 6",
+            "start": "12:45",
+            "end": "13:30",
+            "teaching": true
+          }
+        ]
+      },
+      {
+        "id": "day3",
+        "name": "Wednesday",
+        "slots": [
+          {
+            "id": "d3s0",
+            "name": "Period 1",
+            "start": "08:00",
+            "end": "08:45",
+            "teaching": true
+          },
+          {
+            "id": "d3s1",
+            "name": "Period 2",
+            "start": "08:45",
+            "end": "09:30",
+            "teaching": true
+          },
+          {
+            "id": "d3s2",
+            "name": "Break",
+            "start": "09:30",
+            "end": "09:50",
+            "teaching": false
+          },
+          {
+            "id": "d3s3",
+            "name": "Period 3",
+            "start": "09:50",
+            "end": "10:35",
+            "teaching": true
+          },
+          {
+            "id": "d3s4",
+            "name": "Period 4",
+            "start": "10:35",
+            "end": "11:20",
+            "teaching": true
+          },
+          {
+            "id": "d3s5",
+            "name": "Period 5",
+            "start": "11:20",
+            "end": "12:05",
+            "teaching": true
+          },
+          {
+            "id": "d3s6",
+            "name": "Lunch",
+            "start": "12:05",
+            "end": "12:45",
+            "teaching": false
+          },
+          {
+            "id": "d3s7",
+            "name": "Period 6",
+            "start": "12:45",
+            "end": "13:30",
+            "teaching": true
+          }
+        ]
+      },
+      {
+        "id": "day4",
+        "name": "Thursday",
+        "slots": [
+          {
+            "id": "d4s0",
+            "name": "Period 1",
+            "start": "08:00",
+            "end": "08:45",
+            "teaching": true
+          },
+          {
+            "id": "d4s1",
+            "name": "Period 2",
+            "start": "08:45",
+            "end": "09:30",
+            "teaching": true
+          },
+          {
+            "id": "d4s2",
+            "name": "Break",
+            "start": "09:30",
+            "end": "09:50",
+            "teaching": false
+          },
+          {
+            "id": "d4s3",
+            "name": "Period 3",
+            "start": "09:50",
+            "end": "10:35",
+            "teaching": true
+          },
+          {
+            "id": "d4s4",
+            "name": "Period 4",
+            "start": "10:35",
+            "end": "11:20",
+            "teaching": true
+          },
+          {
+            "id": "d4s5",
+            "name": "Period 5",
+            "start": "11:20",
+            "end": "12:05",
+            "teaching": true
+          },
+          {
+            "id": "d4s6",
+            "name": "Lunch",
+            "start": "12:05",
+            "end": "12:45",
+            "teaching": false
+          },
+          {
+            "id": "d4s7",
+            "name": "Period 6",
+            "start": "12:45",
+            "end": "13:30",
+            "teaching": true
+          }
+        ]
+      }
+    ],
+    "teachers": [
+      {
+        "id": "t0_0",
+        "name": "Mrs Smith 1",
+        "unavailable": [],
+        "max_daily": null,
+        "max_consecutive": null
+      },
+      {
+        "id": "t0_1",
+        "name": "Mr Jones 1",
+        "unavailable": [],
+        "max_daily": null,
+        "max_consecutive": null
+      },
+      {
+        "id": "t0_2",
+        "name": "Ms Khan 1",
+        "unavailable": [],
+        "max_daily": null,
+        "max_consecutive": null
+      },
+      {
+        "id": "t0_3",
+        "name": "Mr Green 1",
+        "unavailable": [],
+        "max_daily": null,
+        "max_consecutive": null
+      },
+      {
+        "id": "t0_4",
+        "name": "Ms Brown 1",
+        "unavailable": [],
+        "max_daily": null,
+        "max_consecutive": null
+      }
+    ],
+    "classes": [
+      {
+        "id": "c0",
+        "name": "7A",
+        "year": "7"
+      },
+      {
+        "id": "c1",
+        "name": "7B",
+        "year": "7"
+      },
+      {
+        "id": "c2",
+        "name": "7C",
+        "year": "7"
+      }
+    ],
+    "subjects": [
+      {
+        "id": "sub0",
+        "name": "Mathematics"
+      },
+      {
+        "id": "sub1",
+        "name": "English"
+      },
+      {
+        "id": "sub2",
+        "name": "Science"
+      },
+      {
+        "id": "sub3",
+        "name": "History"
+      },
+      {
+        "id": "sub4",
+        "name": "Physical education"
+      }
+    ],
+    "rooms": [
+      {
+        "id": "lab",
+        "name": "Science laboratory",
+        "unavailable": []
+      }
+    ],
+    "requirements": [
+      {
+        "id": "r0_0",
+        "class_id": "c0",
+        "subject_id": "sub0",
+        "teacher_id": "t0_0",
+        "periods": 35,
+        "doubles": 0,
+        "max_per_day": 2,
+        "room_ids": [],
+        "spread": true
+      },
+      {
+        "id": "r0_1",
+        "class_id": "c0",
+        "subject_id": "sub1",
+        "teacher_id": "t0_1",
+        "periods": 5,
+        "doubles": 0,
+        "max_per_day": 2,
+        "room_ids": [],
+        "spread": true
+      },
+      {
+        "id": "r0_2",
+        "class_id": "c0",
+        "subject_id": "sub2",
+        "teacher_id": "t0_2",
+        "periods": 4,
+        "doubles": 1,
+        "max_per_day": 2,
+        "room_ids": [
+          "lab"
+        ],
+        "spread": true
+      },
+      {
+        "id": "r0_3",
+        "class_id": "c0",
+        "subject_id": "sub3",
+        "teacher_id": "t0_3",
+        "periods": 3,
+        "doubles": 0,
+        "max_per_day": 2,
+        "room_ids": [],
+        "spread": true
+      },
+      {
+        "id": "r0_4",
+        "class_id": "c0",
+        "subject_id": "sub4",
+        "teacher_id": "t0_4",
+        "periods": 2,
+        "doubles": 0,
+        "max_per_day": 2,
+        "room_ids": [],
+        "spread": true
+      },
+      {
+        "id": "r1_0",
+        "class_id": "c1",
+        "subject_id": "sub0",
+        "teacher_id": "t0_0",
+        "periods": 5,
+        "doubles": 0,
+        "max_per_day": 2,
+        "room_ids": [],
+        "spread": true
+      },
+      {
+        "id": "r1_1",
+        "class_id": "c1",
+        "subject_id": "sub1",
+        "teacher_id": "t0_1",
+        "periods": 5,
+        "doubles": 0,
+        "max_per_day": 2,
+        "room_ids": [],
+        "spread": true
+      },
+      {
+        "id": "r1_2",
+        "class_id": "c1",
+        "subject_id": "sub2",
+        "teacher_id": "t0_2",
+        "periods": 4,
+        "doubles": 1,
+        "max_per_day": 2,
+        "room_ids": [
+          "lab"
+        ],
+        "spread": true
+      },
+      {
+        "id": "r1_3",
+        "class_id": "c1",
+        "subject_id": "sub3",
+        "teacher_id": "t0_3",
+        "periods": 3,
+        "doubles": 0,
+        "max_per_day": 2,
+        "room_ids": [],
+        "spread": true
+      },
+      {
+        "id": "r1_4",
+        "class_id": "c1",
+        "subject_id": "sub4",
+        "teacher_id": "t0_4",
+        "periods": 2,
+        "doubles": 0,
+        "max_per_day": 2,
+        "room_ids": [],
+        "spread": true
+      },
+      {
+        "id": "r2_0",
+        "class_id": "c2",
+        "subject_id": "sub0",
+        "teacher_id": "t0_0",
+        "periods": 5,
+        "doubles": 0,
+        "max_per_day": 2,
+        "room_ids": [],
+        "spread": true
+      },
+      {
+        "id": "r2_1",
+        "class_id": "c2",
+        "subject_id": "sub1",
+        "teacher_id": "t0_1",
+        "periods": 5,
+        "doubles": 0,
+        "max_per_day": 2,
+        "room_ids": [],
+        "spread": true
+      },
+      {
+        "id": "r2_2",
+        "class_id": "c2",
+        "subject_id": "sub2",
+        "teacher_id": "t0_2",
+        "periods": 4,
+        "doubles": 1,
+        "max_per_day": 2,
+        "room_ids": [
+          "lab"
+        ],
+        "spread": true
+      },
+      {
+        "id": "r2_3",
+        "class_id": "c2",
+        "subject_id": "sub3",
+        "teacher_id": "t0_3",
+        "periods": 3,
+        "doubles": 0,
+        "max_per_day": 2,
+        "room_ids": [],
+        "spread": true
+      },
+      {
+        "id": "r2_4",
+        "class_id": "c2",
+        "subject_id": "sub4",
+        "teacher_id": "t0_4",
+        "periods": 2,
+        "doubles": 0,
+        "max_per_day": 2,
+        "room_ids": [],
+        "spread": true
+      }
+    ],
+    "settings": {
+      "rooms_enabled": true,
+      "reduce_gaps": false,
+      "time_limit": 30.0
+    },
+    "lessons": [],
+    "scheduled_fingerprint": ""
+  }
+}

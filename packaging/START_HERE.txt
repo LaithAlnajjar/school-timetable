@@ -1,0 +1,25 @@
+SCHOOL TIMETABLE
+
+1. Extract the entire ZIP into a folder you can find again.
+2. Open the extracted SchoolTimetable folder.
+3. Double-click SchoolTimetable.exe.
+
+Keep the _internal folder beside the EXE. It contains the program's libraries.
+You do not need to install Python, Excel or any development tools.
+No account, subscription, internet connection or administrator rights is required.
+Windows 10 version 1809 or later, 64-bit; Windows 11 is recommended.
+
+Choose Load example school for a practice school, or start with School week.
+Follow the numbered steps on the left. Help contains the full plain-English guide.
+USER_GUIDE.md is another copy. Examples contains only fictional school data.
+
+Use Save to keep your editable school project in Documents or a folder you choose.
+Use Save As for a new term's copy. Use Export for printable PDFs or Excel workbooks.
+Exporting is separate from saving your editable project.
+
+After an unexpected shutdown, start the app again to recover unsaved work.
+Your saved projects stay where you chose to save them. Automatic recovery and logs
+are kept in your Windows local application-data folder, separate from this EXE.
+
+This build is unsigned. Only run copies obtained from a source you trust.
+Third-party licenses are included in LICENSES and THIRD_PARTY_NOTICES.txt.
